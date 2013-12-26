@@ -1,7 +1,7 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/01/DMux4Way.hdl
+// 4-way 1-bit De-multiplexer Implementation 
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
 
 /**
  * 4-way demultiplexor.
@@ -16,5 +16,7 @@ CHIP DMux4Way {
     OUT a, b, c, d;
 
     PARTS:
-    // Put your code here:
+    DMux(in=in,  sel=sel[1], a=in0, b=in1);
+    DMux(in=in0, sel=sel[0], a=a,   b=b);
+    DMux(in=in1, sel=sel[0], a=c,   b=d);
 }
