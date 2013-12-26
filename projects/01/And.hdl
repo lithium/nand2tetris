@@ -1,6 +1,6 @@
 // And Gate Implementation 
 // For the book "The Elements of Computing Systems" (www.nand2tetris.org)
-// Author: Wiggins
+// Author: Matthew Wiggins
 
 /**
  * And gate: out = 1 if {a==1 and b==1}, 0 otherwise
