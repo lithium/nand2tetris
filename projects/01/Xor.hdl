@@ -16,6 +16,7 @@ A B | OUT
 1 1 | 0
 */
 
+
 /*
 (a && !b) || (!a && b)
 */
@@ -26,10 +27,16 @@ CHIP Xor {
     OUT out;
 
     PARTS:
+    Nand(a=a, b=b, out=aNandB);
+    Nand(a=a, b=aNandB, out=a1);
+    Nand(a=aNandB, b=b, out=b1);
+    Nand(a=a1, b=b1, out=out);
 
+/* Less efficient version (9 gates vs 4):
     Not(in=a, out=notA);
     Not(in=b, out=notB);
     And(a=a, b=notB, out=w1);
     And(a=notA, b=b, out=w2);
     Or(a=w1, b=w2, out=out);
+*/
 }
