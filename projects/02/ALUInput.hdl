@@ -1,0 +1,23 @@
+// 16-bit ALU Input chip
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
+
+CHIP ALUInput {
+  IN
+    in[16],  // 16-bit input
+    zero,    // should it be zero'd
+    not;  // should it be not'd
+
+  OUT
+    out[16];
+
+  PARTS:
+    // zero if needed
+    Mux16(a=in, b=false, sel=zero, out=in0);
+
+    // not if needed
+    Not16(in=in0, out=in1);
+
+    Mux16(a=in0, b=in1, sel=not, out=out);
+}

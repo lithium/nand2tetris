@@ -1,0 +1,27 @@
+// Half-Adder Implementation 
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
+
+/**
+ * Computes the sum of two bits.
+ */
+
+/*
+a b | carry sum
+----+----------
+0 0 | 0     0
+0 1 | 0     1
+1 0 | 0     1
+1 1 | 1     0
+*/
+
+CHIP HalfAdder {
+    IN a, b;    // 1-bit inputs
+    OUT sum,    // Right bit of a + b 
+        carry;  // Left bit of a + b
+
+    PARTS:
+    And(a=a, b=b, out=carry);
+    Xor(a=a, b=b, out=sum);
+}

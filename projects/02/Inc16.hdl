@@ -1,0 +1,16 @@
+// 16-bit Incrementer Implementation 
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
+
+/**
+ * 16-bit incrementer: out = in + 1 (arithmetic addition)
+ */
+
+CHIP Inc16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+    Add16(a=in, b[0]=true, out=out);
+}

@@ -1,0 +1,10 @@
+
+
+CHIP TwosComplement {
+  IN in[16];
+  OUT out[16];
+
+  PARTS:
+    Not16(in=in, out=onesComplement);
+    Inc16(in=onesComplement, out=out);
+}
