@@ -1,7 +1,7 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/02/ALU.hdl
+// 16-bit ALU Implementation 
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
 
 /**
  * The ALU. Computes one of the following functions:
@@ -45,5 +45,26 @@ CHIP ALU {
         ng; // 1 if (out<0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+        // process inputs
+        ALUInput(in=x, zero=zx, not=nx, out=inputX);
+        ALUInput(in=y, zero=zy, not=ny, out=inputY);
+
+        Add16(a=inputX, b=inputY, out=xPlusY);
+        And16(a=inputX, b=inputY, out=xAndY);
+        // choose between + or &
+        Mux16(a=xAndY, b=xPlusY, sel=f, out=out0);
+
+        // negate output if flag set
+        Not16(in=out0, out=negatedOut);
+        Mux16(a=out0, b=negatedOut, sel=no, out=out1);
+
+        // set negate register
+        IsNegative16(in=out1, out=ng);
+
+        // set zero register
+        IsZero16(in=out1, out=zr);
+
+        // return out1  
+        Mux16(a=out1, b[0..15]=false, sel=false, out=out);
+
 }
