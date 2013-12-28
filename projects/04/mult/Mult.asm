@@ -13,14 +13,11 @@
         M=0
 
 (LOOP)
-        @R1        // while r1 > 0 {
+        @R1        // while --r1 > 0 {
+        M=M-1
         D=M
         @END
-        D;JLE      
-
-        @R1
-        M=D-1      // R1 -= 1
-
+        D;JLT      
 
         @R0        // R2 += R0
         D=M
