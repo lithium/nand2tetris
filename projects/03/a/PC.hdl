@@ -1,7 +1,6 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/03/a/PC.hdl
+// Program Counter Implementation 
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
 
 /**
  * A 16-bit counter with load and reset control bits.
@@ -16,7 +15,20 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+
+    // increment if needed
+    Inc16(in=register, out=incremented);
+    Mux16(a=register, b=incremented, sel=inc, out=value0);
+
+    // input if load enabled
+    Mux16(a=value0, b=in, sel=load, out=value1);
+
+    // register value or zero if reset enabled
+    Mux16(a=value1, b=false, sel=reset, out=value2);
+
+    // Load/Store from register
+    Register(in=value2, load=true, out=out, out=register);
+
 }
 
 
