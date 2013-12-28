@@ -1,0 +1,36 @@
+// Program Counter Implementation 
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
+/**
+ * A 16-bit counter with load and reset control bits.
+ * if      (reset[t]==1) out[t+1] = 0
+ * else if (load[t]==1)  out[t+1] = in[t]
+ * else if (inc[t]==1)   out[t+1] = out[t] + 1  (integer addition)
+ * else                  out[t+1] = out[t]
+ */
+
+CHIP PC {
+    IN in[16],load,inc,reset;
+    OUT out[16];
+
+    PARTS:
+
+    // increment if needed
+    Inc16(in=register, out=incremented);
+    Mux16(a=register, b=incremented, sel=inc, out=value0);
+
+    // input if load enabled
+    Mux16(a=value0, b=in, sel=load, out=value1);
+
+    // register value or zero if reset enabled
+    Mux16(a=value1, b=false, sel=reset, out=value2);
+
+    // Load/Store from register
+    Register(in=value2, load=true, out=out, out=register);
+
+}
+
+
+
+
