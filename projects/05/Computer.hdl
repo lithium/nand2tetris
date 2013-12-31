@@ -1,7 +1,7 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/05/Computer.hdl
+// Hack Computer Chip
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
 
 /**
  * The HACK computer, including CPU, ROM and RAM.
@@ -19,5 +19,16 @@ CHIP Computer {
     IN reset;
 
     PARTS:
-    // Put your code here:
+
+    Memory(in=cpuOutM, load=cpuWriteM, address=cpuAddressM, out=memoryOut);
+
+    ROM32K(address=cpuPC, out=romOut);
+
+    CPU(inM=memoryOut, 
+        instruction=romOut, 
+        reset=reset, 
+        outM=cpuOutM, 
+        writeM=cpuWriteM, 
+        addressM=cpuAddressM, 
+        pc=cpuPC);
 }
