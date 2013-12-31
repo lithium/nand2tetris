@@ -1,7 +1,7 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/05/CPU.hdl
+// Hack CPU Chip 
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
 
 /**
  * The Central Processing unit (CPU).
@@ -25,6 +25,34 @@
  * than to the address resulting from executing the current instruction. 
  */
 
+/*
+
+A Instruction:
+0vvvvvvvvvvvvvvv
+
+C Instruction:
+111accccccdddjjj
+
+a, Bit 12:
+    - if set operand is Memory instead of A
+
+cccccc, Bits 11..6:
+    - opcode
+
+ddd, bits 3..5:
+    - bit 5: store ALU result in A register
+    - bit 4: store ALU result in D register 
+    - bit 3: store ALU result at Memory[A]
+
+jjj, bits 0..2:
+    - bit 2: ALU result < 0
+    - bit 1: ALU result = 0
+    - bit 0: ALU result > 0
+    - 0b000: no jump
+    - 0b111: unconditional jump
+
+*/
+
 CHIP CPU {
 
     IN  inM[16],         // M value input  (M = contents of RAM[A])
@@ -39,5 +67,82 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+
+
+
+
+    /*
+     * Accumulator
+     */
+    ARegister(in=accumulatorIn, 
+              out=accumulatorOut,
+              load=shouldStoreA);
+    Mux16(a=accumulatorOut, sel=false, out[0..14]=addressM);
+
+    // If bit15 clear its an "A-" instruction. 
+    Not(in=instruction[15], out=notBit15);
+    And(a=true, b=notBit15, out=isAInstruction);
+
+    // if instruction[5], destination includes A
+    Or(a=isAInstruction, b=instruction[5], out=shouldStoreA);
+
+    // input is either aluOutput, or constant from instruction
+    Mux16(a=aluOutput, b[0..14]=instruction[0..14], sel=isAInstruction, out=accumulatorIn);
+
+
+    /*
+     * Data register
+     */
+    DRegister(in=aluOutput, out=dRegisterOut, load=shouldStoreD);
+
+    // if C-instruction and bit4 set, destination includes D
+    And(a=instruction[15], b=instruction[4], out=shouldStoreD);
+
+
+
+    /*
+     * PC Register
+     */
+    PC(in=accumulatorOut, 
+       inc=areNotJumping, 
+       load=areJumping, 
+       reset=reset, 
+       out[0..14]=pc);
+
+    // if any of bits 0..2 are set, a jump instruction present
+    Or(a=jumpGreater, b=jumpZero, out=jump0);
+    Or(a=jump0, b=jumpLess, out=jump1);
+    And(a=instruction[15], b=jump1, out=areJumping);
+    Not(in=areJumping, out=areNotJumping);
+
+    // check jump conditions 
+    And(a=instruction[0], b=aluPositive, out=jumpGreater);
+    And(a=instruction[1], b=aluZero, out=jumpZero);
+    And(a=instruction[2], b=aluNegative, out=jumpLess);
+
+
+
+
+    /*
+     * ALU
+     */
+    ALU(x=dRegisterOut,
+        y=accumulatorOrMemory, 
+        zx=instruction[11], 
+        nx=instruction[10],
+        zy=instruction[9], 
+        ny=instruction[8], 
+        f=instruction[7], 
+        no=instruction[6], 
+        out=aluOutput, out=outM,
+        zr=aluZero, ng=aluNegative);
+    Not(in=aluZero, out=aluNotZero);
+    Not(in=aluNegative, out=aluNotNegative);
+    And(a=aluNotZero, b=aluNotNegative, out=aluPositive);
+
+    // second value is either accumulator or memory based on bit 12
+    Mux16(a=accumulatorOut, b=inM, sel=instruction[12], out=accumulatorOrMemory);
+
+    // if C-instruction and bit 3 set, destination includes M
+    And(a=instruction[15], b=instruction[3], out=writeM);
 }
