@@ -75,9 +75,8 @@ CHIP CPU {
      * Accumulator
      */
     ARegister(in=accumulatorIn, 
-              out=accumulatorOut,
+              out=accumulatorOut, out[0..14]=addressM,
               load=shouldStoreA);
-    Mux16(a=accumulatorOut, sel=false, out[0..14]=addressM);
 
     // If bit15 clear its an "A-" instruction. 
     Not(in=instruction[15], out=notBit15);
@@ -86,7 +85,7 @@ CHIP CPU {
     // if instruction[5], destination includes A
     Or(a=isAInstruction, b=instruction[5], out=shouldStoreA);
 
-    // input is either aluOutput, or constant from instruction
+    // accumulator input is either aluOutput, or constant from instruction
     Mux16(a=aluOutput, b[0..14]=instruction[0..14], sel=isAInstruction, out=accumulatorIn);
 
 
