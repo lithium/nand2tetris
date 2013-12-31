@@ -1,7 +1,7 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/05/Memory.hdl
+// Hack Memory Chip
+// For the book "The Elements of Computing Systems" (www.nand2tetris.org)
+// Author: Matthew Wiggins
+
 
 /**
  * The complete address space of the computer's memory,
@@ -27,5 +27,34 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+
+    // if bit[14] and bit[13] set, addressing keyboard
+    And(a=address[14], b=address[13], out=addressingKeyboard);
+
+    // if bit[14] set and bit[13] clear, addressing screen
+    And(a=true, b=address[14], out=bit14set);
+    Not(in=address[13], out=notbit13);
+    And(a=bit14set, b=notbit13, out=addressingScreen);
+
+    // otherwise we are addressing ram
+    Or(a=addressingScreen, b=addressingKeyboard, out=notAddressingRam);
+    Not(in=notAddressingRam, out=addressingRam);
+
+
+    // RAM chip
+    RAM16K(in=in, load=ramLoad, address=address[0..13], out=ramOut);
+    And(a=load, b=addressingRam, out=ramLoad);
+
+    // Screen memory map
+    Screen(in=in, load=screenLoad, address=address[0..12], out=screenOut);
+    And(a=load, b=addressingScreen, out=screenLoad);
+
+    // Keyboard memory map
+    Keyboard(out=keyboardOut);
+
+
+    // Mux output
+    Mux4Way16(a=ramOut, b=ramOut, d=keyboardOut, c=screenOut, sel=address[13..14], out=out);
+
+
 }
