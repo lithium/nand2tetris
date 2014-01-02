@@ -16,13 +16,31 @@ class Main {
     return lines;
   }
 
+  function int strRightIndexOf(String s, char c)
+  {
+    var int i;
+    var int l;
+
+    let l = s.length();
+    let i = l-1;
+    while (i > 0 | i = 0) {
+      if (c = s.charAt(i)) {
+        return i;
+      }
+      let i = i - 1;
+    }
+    return -1;
+  }
+
 
   function void main() {
-    var String arg;
+    var String inputFile, outputFile;
     var int fh;
     var StringList lines;
-
+    var StringList compiled;
+    var Jhasm jhasm;
     var String s;
+
     var int i;
 
     // Parse .asm file from command-line arguments
@@ -31,24 +49,31 @@ class Main {
       do Output.println();
       return;
     }
-    let arg = Sys.argument(0);
+    let inputFile = Sys.argument(0);
 
     do Output.printString("Assembling: ");
-    do Output.printString(arg);
+    do Output.printString(inputFile);
     do Output.println();
 
     // read in contents of file 
-    let fh = File.open(arg, 0);
+    let fh = File.open(inputFile, 0);
     let lines = Main.readLines(fh);
     do File.close(fh);
 
+    // translate assembly 
+    let jhasm = Jhasm.new();
+    let compiled = jhasm.assemble(lines);
 
+    // write out to new file
+    //let fh = File.open(outputFile, 1);
     let i = 0;
-    while (i < lines.size()) {
-      do Output.printString(lines.get(i));
+    while (i < compiled.size()) {
+      let s = compiled.get(i);
+      do Output.printString(s);
       do Output.println();
       let i = i + 1;
     }
+    //do File.close(fh);
 
 
 

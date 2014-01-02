@@ -1,0 +1,69 @@
+
+
+
+class Jhasm 
+{
+  field Array _symbolKeys;
+  field Array _symbolValues;
+  field StringList _lines;
+
+
+  constructor Jhasm new()
+  {
+    return this; 
+  } 
+
+  /*
+   * Assemble source lines and return a StringList of Hack binary
+   */
+  method StringList assemble(StringList inText)
+  {
+    var StringList out;
+    var int i;
+    var int l;
+    var String line;
+
+    do _scrubInput(inText);
+    do _buildSymbolTable();
+
+    let i = 0;
+    let l = _lines.size();
+    let out = StringList.new(l);
+
+    while (i < l) {
+      do out.add( _compileInstruction(_lines.get(i)) );
+      let i = i + 1;
+    }
+
+    return out;
+  }
+
+  /*
+   * Build a table of all symbols used (first-pass)
+   */
+  method boolean _buildSymbolTable()
+  {
+    if (_lines = null) {
+      return false;
+    }
+
+    return true;
+  } 
+
+  /*
+   * Strips comments and blank lines from input
+   */
+  method void _scrubInput(StringList input) 
+  {
+    let _lines = input;
+    return;
+  }
+
+  /*
+   * Translate a Hack Assembler mneumonic into Hack Binary
+   */
+  method String _compileInstruction(String instruction)
+  {
+    return instruction;
+  }
+}
