@@ -1,0 +1,25 @@
+
+class Main {
+  function void main() {
+    var StringList list;
+    var int i;
+    var int l;
+
+    let list = StringList.new(2);
+
+    do list.add("Foo");
+    do list.add("Bar");
+    do list.add("Baz");
+
+    let i = 0;
+    let l = list.size();
+    while (i < l) {
+      do Output.printString(list.get(i));
+      do Output.println();
+      let i = i + 1;
+    }
+
+ 
+    return;
+  }
+}

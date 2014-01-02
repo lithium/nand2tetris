@@ -1,0 +1,65 @@
+
+/*
+ * Mutable list of strings
+ */
+
+class StringList
+{
+  field Array _strings;
+  field int _capacity;
+  field int _size;
+
+  constructor StringList new(int capacity)
+  {
+    let _strings = Array.new(capacity);
+    let _size = 0;
+    let _capacity = capacity;
+    return this;
+  }
+
+  method void dispose()
+  {
+    do _strings.dispose();
+    let _strings = null;
+    let _size = 0;
+    let _capacity = 0;
+    return;
+  }
+
+  method void add(String str)
+  {
+    if ((_size+1 > _capacity) | (_size+1 = _capacity)) {
+      do resize(_capacity*2);
+    }
+
+    let _strings[_size] = str;
+    let _size = _size + 1;
+    return;
+  }
+
+  method String get(int index) {
+    return _strings[index];
+  }
+
+  method int size() {
+    return _size;
+  }
+
+  method void resize(int newCapacity)
+  {
+    var Array arr;
+    var int i;
+
+    let arr = Array.new(newCapacity);
+    let i = 0;
+    while (i < _size) {
+      let arr[i] = _strings[i];
+      let i = i + 1;
+    }
+    do _strings.dispose();
+    let _strings = arr;
+    let _capacity = newCapacity;
+
+    return;
+  }
+}

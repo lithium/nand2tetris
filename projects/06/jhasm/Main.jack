@@ -2,12 +2,30 @@
 
 class Main {
 
+  function StringList readLines(int fh) {
+    var StringList lines;
+    var String line;
+
+    let lines = StringList.new(2);
+
+    while (File.ready(fh) = 1) {
+      let line = File.readln(fh);
+      do lines.add(line);
+    }
+
+    return lines;
+  }
+
+
   function void main() {
     var String arg;
     var int fh;
-    var int write_fh;
-    var String line;
+    var StringList lines;
 
+    var String s;
+    var int i;
+
+    // Parse .asm file from command-line arguments
     if (Sys.argumentCount() < 1) {
       do Output.printString("Usage: jhasm <file.asm>");
       do Output.println();
@@ -18,21 +36,20 @@ class Main {
     do Output.printString("Assembling: ");
     do Output.printString(arg);
     do Output.println();
-  
+
+    // read in contents of file 
     let fh = File.open(arg, 0);
-
-    let write_fh = File.open("/tmp/foo.out", 1);
-
-    while (File.ready(fh) = 1) {
-      let line = File.readln(fh);
-      do Output.printString(line);
-      do Output.println();
-
-      do File.write(write_fh, line);
-      do File.write(write_fh, "\n");
-    }
+    let lines = Main.readLines(fh);
     do File.close(fh);
-    do File.close(write_fh);
+
+
+    let i = 0;
+    while (i < lines.size()) {
+      do Output.printString(lines.get(i));
+      do Output.println();
+      let i = i + 1;
+    }
+
 
 
     return;
