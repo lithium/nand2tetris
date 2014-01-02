@@ -19,6 +19,16 @@ class Main {
       let i = i + 1;
     }
 
+
+    do Output.printInt(list.indexOf("Foo"));
+    do Output.println();
+    do Output.printInt(list.indexOf("Bar"));
+    do Output.println();
+    do Output.printInt(list.indexOf("Baz"));
+    do Output.println();
+    do Output.printInt(list.indexOf("quux"));
+    do Output.println();
+
  
     return;
   }
