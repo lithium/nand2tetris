@@ -69,33 +69,12 @@ class StringList
 
     let i = 0;
     while (i < _size) {
-      if (StringList.stringsMatch(_strings[i], str)) {
+      if (_strings[i].equals(str)) {
         return i;
       }
       let i = i + 1;
     }
 
     return -1;
-  }
-
-  function boolean stringsMatch(String a, String b) 
-  {
-    var int i;
-    var int l;
-
-    let l = a.length();
-    if (~(l = b.length())) {
-      return false;
-    }
-
-    let i = 0;
-    while (i < l) {
-      if (~(a.charAt(i) = b.charAt(i))) {
-        return false;
-      }
-      let i = i + 1;
-    }
-
-    return true;
   }
 }

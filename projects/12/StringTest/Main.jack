@@ -10,6 +10,8 @@ class Main {
     function void main() {
         var String s;
         var String i;
+        var Array b;
+        var int idx;
         
         let s = String.new(0); // A zero-capacity string should be supported
         do s.dispose();
@@ -73,6 +75,24 @@ class Main {
         
         do Output.printString("newLine: ");
         do Output.printInt(String.newLine());    // newLine: 128
+        do Output.println();
+
+
+
+        let s = "Foo.Bar";
+        let idx = s.indexOfChar(String.ord("."));
+
+        do Output.printString("indexOf: ");
+        do Output.printInt(idx);
+        do Output.println();
+
+        let b = s.bytes();
+        let b[idx+1] = String.ord("Q");
+        let b[idx+2] = String.ord("u");
+        let b[idx+3] = String.ord("x");
+
+        do Output.printString("bytes: ");
+        do Output.printString(s);
         do Output.println();
         
         do i.dispose();
