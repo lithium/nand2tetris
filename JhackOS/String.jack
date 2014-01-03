@@ -117,6 +117,8 @@ class String {
     }
 
 
+    /** Returns the number of characters at the beginning of the string 
+        that match any the characters in _match_ **/
     method int span(String match) {
         var int i;
         let i = 0;
@@ -126,6 +128,9 @@ class String {
         }
         return i;
     }
+
+    /** Returns the number of characters at the end of the string 
+        that match any the characters in _match_ **/
     method int rspan(String match) {
         var int i;
         var int c;
@@ -138,6 +143,29 @@ class String {
             let c = c + 1;
         }
         return c;
+    }
+
+    /** Remove any characters from the beginning of the string
+        that match any the characters in _match_ **/
+    method void lstrip(String match) {
+        var int l;
+        let l = span(match);
+        if (l > 0) {
+            let _size = _size - l;
+            do Array.copy(_str, _str+l, _size);
+        }
+        return;
+    }
+
+    /** Remove any characters from the end of the string
+        that match any the characters in _match_ **/
+    method void rstrip(String match) {
+        var int l;
+        let l = rspan(match);
+        if (l > 0) {
+            let _size = _size - l;
+        }
+        return;
     }
 
     /** Return the pointer to the strings bytes. **/
