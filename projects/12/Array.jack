@@ -8,11 +8,14 @@
  */
 class Array {
 
-    /** Constructs a new Array of the given size. */
-    function Array new(int size) {
+    /** Constructs a new Array of the given capacity. */
+    function Array new(int capacity) {
+      return Memory.alloc(capacity);
     }
 
     /** De-allocates the array and frees its space. */
     method void dispose() {
+      do Memory.deAlloc(this);
+      return;
     }
 }
