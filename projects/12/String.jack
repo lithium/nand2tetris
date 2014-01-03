@@ -177,24 +177,22 @@ class String {
 
 
     method int compare(int offset, String other, int otherOffset, int maxLength) {
-        return String.cmp(_str, offset, other.bytes(), otherOffset, maxLength);
+        return String.cmp(_str+offset, other.bytes()+otherOffset, maxLength);
     }
 
-    function int cmp(Array bytes1, int ofs1, 
-                     Array bytes2, int ofs2, 
-                     int maxLength)
+    function int cmp(Array s1, Array s2, int maxLength)
     {
         var char c;
+        var int i;
 
-        while (maxLength > 0) {
-            let c = bytes1[ofs1] - bytes2[ofs2];
+        let i = 0;
+        while (i < maxLength) {
+            let c = s1[i] - s2[i];
             if (~(c = 0)) {
                 return c;
             }
 
-            let ofs1 = ofs1 + 1;
-            let ofs2 = ofs2 + 1;
-            let maxLength = maxLength - 1;
+            let i = i + 1;
         }
         return 0;
     }

@@ -66,10 +66,12 @@ class StringList
   method int indexOf(String str)
   {
     var int i;
+    var String s;
 
     let i = 0;
     while (i < _size) {
-      if (_strings[i].equals(str)) {
+      let s = _strings[i];
+      if (s.equals(str)) {
         return i;
       }
       let i = i + 1;

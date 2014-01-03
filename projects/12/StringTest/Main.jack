@@ -119,12 +119,12 @@ class Main {
         let i = "barbaz";
         let b = i.bytes();
 
-        let idx = String.cmp(a,0, b,0, 6);
+        let idx = String.cmp(a, b, 6);
         do Output.printString("String.cmp: -28 == ");
         do Output.printInt(idx);
         do Output.println();
 
-        let idx = String.cmp(b,0, a,0, 6);
+        let idx = String.cmp(b, a, 6);
         do Output.printString("String.cmp: 28 == ");
         do Output.printInt(idx);
         do Output.println();
@@ -143,7 +143,7 @@ class Main {
         do Output.printString("copy: Foobar == ");
         do Output.printString(i);
         do Output.println();
-        
+
         do i.dispose();
 
         return;
