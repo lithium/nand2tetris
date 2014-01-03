@@ -89,15 +89,17 @@ class Main {
     }
 
     // write out to new file
-    //let fh = File.open(outputFile, 1);
+    let fh = File.open(outputFile, 1);
     let i = 0;
     while (i < compiled.size()) {
       let s = compiled.get(i);
       do Output.printString(s);
       do Output.println();
+      do s.appendChar(10);     // '\n'
+      do File.write(fh, s);
       let i = i + 1;
     }
-    //do File.close(fh);
+    do File.close(fh);
 
 
 
