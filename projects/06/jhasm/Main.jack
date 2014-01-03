@@ -16,6 +16,36 @@ class Main {
     return lines;
   }
 
+  function void usage() {
+    do Output.printString("Usage: jhasm <file.asm>");
+    do Output.println();
+    return;
+  }
+
+  function String hackFilename(String asmFilename)
+  {
+    var int idx;
+    var String ret;
+    var Array b;
+    var String const;
+
+    let const = "hack";
+
+    let idx = asmFilename.length() - 4;
+    if (String.cmp(asmFilename+idx, ".asm", 4) = -1) {
+      return null;
+    }
+
+    let ret = String.new(asmFilename.length()+1);
+
+    let b = ret.bytes();
+    do Array.copy(b, asmFilename.bytes(), asmFilename.length());
+    do Array.copy(b+idx+1, const.bytes(), 4);
+    do ret.setLength(idx+5);
+
+    return ret;
+  } 
+
   function void main() {
     var String inputFile, outputFile;
     var int fh;
@@ -25,17 +55,25 @@ class Main {
     var String s;
 
     var int i;
+    var int idx;
+    var Array b;
 
     // Parse .asm file from command-line arguments
     if (Sys.argumentCount() < 1) {
-      do Output.printString("Usage: jhasm <file.asm>");
-      do Output.println();
+      do Main.usage();
       return;
     }
     let inputFile = Sys.argument(0);
+    let outputFile = Main.hackFilename(inputFile);
+
+
+
 
     do Output.printString("Assembling: ");
     do Output.printString(inputFile);
+    do Output.println();
+    do Output.printString("Into: ");
+    do Output.printString(outputFile);
     do Output.println();
 
     // read in contents of file 
