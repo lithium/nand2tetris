@@ -11,6 +11,7 @@ class Main {
         var String s;
         var String i;
         var Array b;
+        var Array a;
         var int idx;
         
         let s = String.new(0); // A zero-capacity string should be supported
@@ -77,12 +78,29 @@ class Main {
         do Output.printInt(String.newLine());    // newLine: 128
         do Output.println();
 
+        let s = "Foo";
+
+        do Output.printString("equals: true == ");
+        if (s.equals("Foo")) {
+            do Output.printString("true");
+        } else {
+            do Output.printString("false");
+        }
+        do Output.println();
+
+        do Output.printString("equals: false == ");
+        if (s.equals("Baz")) {
+            do Output.printString("true");
+        } else {
+            do Output.printString("false");
+        }
+        do Output.println();
 
 
         let s = "Foo.Bar";
         let idx = s.indexOfChar(String.ord("."));
 
-        do Output.printString("indexOf: ");
+        do Output.printString("indexOf: 3 == ");
         do Output.printInt(idx);
         do Output.println();
 
@@ -91,8 +109,29 @@ class Main {
         let b[idx+2] = String.ord("u");
         let b[idx+3] = String.ord("x");
 
-        do Output.printString("bytes: ");
+        do Output.printString("bytes: Foo.Qux == ");
         do Output.printString(s);
+        do Output.println();
+
+
+        let s = "Foobar";
+        let a = s.bytes();
+        let i = "barbaz";
+        let b = i.bytes();
+
+        let idx = String.cmp(a,0, b,0, 6);
+        do Output.printString("String.cmp: -28 == ");
+        do Output.printInt(idx);
+        do Output.println();
+
+        let idx = String.cmp(b,0, a,0, 6);
+        do Output.printString("String.cmp: 28 == ");
+        do Output.printInt(idx);
+        do Output.println();
+
+        let idx = s.compare(3, i,0, 3);
+        do Output.printString("compare: 0 == ");
+        do Output.printInt(idx);
         do Output.println();
         
         do i.dispose();

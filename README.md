@@ -22,7 +22,7 @@ First, since Jack/Hack (JHack) doesn't have any filesystem, I needed a way to re
 
 Secondly, I needed the ability to get the filename from the command-line arguments.  I extended the BuiltinVM class Sys. to provide two additional functions: ```String Sys.argument(int index)``` and ```int Sys.argumentCount()```.
 
-(http://github.com/lithium/nand2tetris-open-source)[http://github.com/lithium/nand2tetris-open-source]
+http://github.com/lithium/nand2tetris-open-source
 
 VM Translator (Jhack)
 -------------
