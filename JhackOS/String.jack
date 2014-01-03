@@ -141,13 +141,13 @@ class String {
 
     /** Find the first occurance of the char c in the string. 
      ** Returns -1 if not found **/
-    method int indexOfChar(char c)
+    method int indexOfChar(char c, int offset)
     {
         var int i;
         var int l;
 
         let l = length();
-        let i = 0;
+        let i = offset;
         while (i < l) {
             if (c = charAt(i)) {
                 return i;
@@ -172,6 +172,35 @@ class String {
           }
           let i = i - 1;
         }
+        return -1;
+    }
+
+    /** Find first occurance of the String s 
+     ** Returns the index or -1 if not found **/
+    method int indexOf(String s)
+    {
+        var int idx;
+        var Array b;
+        var int l;
+
+        let b = s.bytes();
+        let l = s.length();
+        let idx = 0;
+
+        while (idx < _size) {
+            let idx = indexOfChar(b[0], idx);
+            if (idx = -1) {
+                return -1;
+            }
+            if (idx+l > _size) {
+                return -1;
+            }
+
+            if (String.cmp(_str+idx, b, l) = 0) {
+                return idx;
+            }
+        }
+
         return -1;
     }
 

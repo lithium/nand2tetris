@@ -97,21 +97,32 @@ class Main {
         do Output.println();
 
 
-        let s = "Foo.Bar";
-        let idx = s.indexOfChar(String.ord("."));
 
-        do Output.printString("indexOf: 3 == ");
+        let s = "Foo.Bar";
+        let idx = s.indexOfChar(String.ord("."), 0);
+
+        do Output.printString("indexOfChar: 3 == ");
+        do Output.printInt(idx);
+        do Output.println();
+
+        let idx = s.indexOf("Bar");
+        do Output.printString("indexOf: 4 == ");
         do Output.printInt(idx);
         do Output.println();
 
         let b = s.bytes();
-        let b[idx+1] = String.ord("Q");
-        let b[idx+2] = String.ord("u");
-        let b[idx+3] = String.ord("x");
-
+        let b[idx+0] = String.ord("Q");
+        let b[idx+1] = String.ord("u");
+        let b[idx+2] = String.ord("x");
         do Output.printString("bytes: Foo.Qux == ");
         do Output.printString(s);
         do Output.println();
+
+        let idx = s.indexOf("Bar");
+        do Output.printString("indexOf: -1 == ");
+        do Output.printInt(idx);
+        do Output.println();
+
 
 
         let s = "Foobar";
