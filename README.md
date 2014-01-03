@@ -18,10 +18,11 @@ Hack Assembler (Jhasm)
 ----------------------
 I decided I wanted to use Jack as my high level language to implement the assembler in.  But in order to fulfill the contract of Chapter 6 I needed to extend the BuiltinVM in two ways. 
 
-First, since Jack/Hack (JHack) doesn't have any filesystem, I needed a way to read and write files from the host machine.  I added a builtinVM class **File** to the VMEmulator java code that was a thin wrapper around java.io.File,BufferedWriter,LineNumberReader. 
+First, since Jack/Hack (JHack) doesn't have any filesystem, I needed a way to read and write files from the host machine.  I added a builtinVM class ```File``` to the VMEmulator java code that was a thin wrapper around java.io.File,BufferedWriter,LineNumberReader. 
 
 Secondly, I needed the ability to get the filename from the command-line arguments.  I extended the BuiltinVM class Sys. to provide two additional functions: ```String Sys.argument(int index)``` and ```int Sys.argumentCount()```.
 
+(http://github.com/lithium/nand2tetris-open-source)[http://github.com/lithium/nand2tetris-open-source]
 
 VM Translator (Jhack)
 -------------
