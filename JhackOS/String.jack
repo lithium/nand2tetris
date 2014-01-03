@@ -256,6 +256,26 @@ class String {
     }
 
 
+    /** Returns a new string **/
+    method String subString(int start, int length)
+    {
+        var String ret;
+        var Array b;
+
+        if (length < 1 | (start+length) > _size | start < 0 | start > _size) {
+            return null;
+        }
+        let ret = String.new(length);
+        let b = ret.bytes();
+
+        do Array.copy(b, _str+start, length);
+        do ret.setLength(length);
+
+        return ret;
+    }
+
+
+
     method int compare(int offset, String other, int otherOffset, int maxLength) {
         return String.cmp(_str+offset, other.bytes()+otherOffset, maxLength);
     }

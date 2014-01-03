@@ -150,10 +150,9 @@ class Main {
         let idx = String.cmp(a, b, 6);
         do Output.printString("String.cmp: -28 == ");
         do Output.printInt(idx);
-        do Output.println();
 
         let idx = String.cmp(b, a, 6);
-        do Output.printString("String.cmp: 28 == ");
+        do Output.printString("  28 == ");
         do Output.printInt(idx);
         do Output.println();
 
@@ -161,7 +160,6 @@ class Main {
         do Output.printString("compare: 0 == ");
         do Output.printInt(idx);
         do Output.println();
-
 
         do i.dispose();
         do s.dispose();
@@ -173,6 +171,14 @@ class Main {
         do Output.println();
 
         do i.dispose();
+
+        let i = s.subString(3,3);
+        do Output.printString("subString: bar == ");
+        do Output.printString(i);
+        do Output.println();
+
+        do i.dispose();
+        do s.dispose();
 
         return;
     }
