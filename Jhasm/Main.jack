@@ -84,6 +84,9 @@ class Main {
     // translate assembly 
     let jhasm = Jhasm.new();
     let compiled = jhasm.assemble(lines);
+    if (compiled = null) {
+      return;
+    }
 
     // write out to new file
     //let fh = File.open(outputFile, 1);

@@ -33,7 +33,15 @@ class Jhasm
     let out = ArrayList.new(l);
 
     while (i < l) {
-      do out.add( _compileInstruction(scrubbed.get(i)) );
+      let line = _compileInstruction(scrubbed.get(i));
+      if (line = null) {
+        do Output.printString(scrubbed.get(i));
+        do Output.printString("Invalid instruction on line ");
+        do Output.printInt(i+1);
+        do Output.println();
+        return null;
+      }
+      do out.add(line);
       let i = i + 1;
     }
 
@@ -111,7 +119,14 @@ class Jhasm
   method String _compileInstruction(String instruction)
   {
     var String address;
+    var String inst;
     var int addr;
+
+    var int compIdx;
+    var int jumpIdx;
+    var String dest, comp, jump;
+    var int d, c, j;
+    var int i;
 
     if (instruction.charAt(0) = 64) {   // '@'
       // A- Instruction
@@ -127,7 +142,47 @@ class Jhasm
     }
 
     // C- Instruction
-    return instruction;
+
+    let compIdx = instruction.indexOfChar(61, 0);   // '=' 
+    let jumpIdx = instruction.indexOfChar(59, 0);   // ';' 
+
+    let d = 0;
+    let c = 0;
+    let j = 0;
+    if (~(compIdx = -1)) {
+      // dest instruction
+
+      let dest = String.newFromBytes(instruction.bytes(), compIdx);
+      let comp = String.newFromBytes(instruction.bytes() + compIdx+1, 
+                                     instruction.length()-compIdx-1);
+
+      let d = Jhasm.destFromMneumonic(dest);
+      let c = Jhasm.compFromMneumonic(comp);
+    } else {
+      if (~(jumpIdx = -1)) {
+        // jump instruction
+        let comp = String.newFromBytes(instruction.bytes(), jumpIdx-1);
+        let jump = String.newFromBytes(instruction.bytes()+jumpIdx+1,
+                                       instruction.length()-jumpIdx-1);
+
+        let c = Jhasm.compFromMneumonic(comp);
+        let j = Jhasm.jumpFromMneumonic(jump);
+      } else {
+        // invalid instruction
+        return null;
+      }
+    }
+
+    let i = 0;
+    let i = i | ((c & 127) * 64);    // i |= (c & 0x7f) << 6
+    let i = i | ((d & 7) * 8);       // i |= (d & 0x7) << 3
+    let i = i | (j & 7);             // i |= (j & 0x7)
+
+    let inst = Jhasm.binaryString(i);
+    do inst.setCharAt(0, 49);        // i |= 0b1110000000000000
+    do inst.setCharAt(1, 49);
+    do inst.setCharAt(2, 49);
+    return inst;
   }
 
 
@@ -150,14 +205,49 @@ class Jhasm
         do ret.setCharAt(15-i, 48);    // '0'
       }
 
-      if (mask = 1) {
-        let mask = 2;
-      } else {
-        let mask = mask * mask;
-      }
+      let mask = mask * 2;
       let i = i + 1;
     }
     do ret.setLength(16);
     return ret;
+  }
+
+  function int destFromMneumonic(String dest)
+  {
+    var int i;
+    var int d;
+    let d = 0;
+
+    let i = dest.indexOfChar(65, 0);   // 'A'
+    if (~(i = -1)) {
+      let d = d | 4;
+    }
+    let i = dest.indexOfChar(68, 0);   // 'D'
+    if (~(i = -1)) {
+      let d = d | 2;
+    }
+    let i = dest.indexOfChar(77, 0);   // 'M'
+    if (~(i = -1)) {
+      let d = d | 1;
+    }
+    return d;
+  }
+
+  function int jumpFromMneumonic(String jump)
+  {
+    if (jump.equals("JMP")) { return 7; }
+    if (jump.equals("JLE")) { return 6; }
+    if (jump.equals("JNE")) { return 5; }
+    if (jump.equals("JLT")) { return 4; }
+    if (jump.equals("JGE")) { return 3; }
+    if (jump.equals("JEQ")) { return 2; }
+    if (jump.equals("JGT")) { return 1; }
+
+    return 0;
+  }  
+
+  function int compFromMneumonic(String comp)
+  {
+    return 0;
   }
 }
