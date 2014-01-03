@@ -133,9 +133,18 @@ class Main {
         do Output.printString("compare: 0 == ");
         do Output.printInt(idx);
         do Output.println();
-        
+
+
         do i.dispose();
         do s.dispose();
+
+        let s = "Foobar";
+        let i = String.copy(s);
+        do Output.printString("copy: Foobar == ");
+        do Output.printString(i);
+        do Output.println();
+        
+        do i.dispose();
 
         return;
     }

@@ -23,6 +23,17 @@ class String {
         return this;
     }
 
+    function String copy(String string) {
+        var String ret;
+        var int l;
+
+        let l = string.length();
+        let ret = String.new(l);
+        do Array.copy(ret.bytes(), string.bytes(), l);
+        do ret.setLength(l);
+        return ret;
+    }
+
     /** De-allocates the string and frees its space. */
     method void dispose() {
         if (~(_str = null)) {
@@ -37,6 +48,12 @@ class String {
     /** Returns the current length of this String. */
     method int length() {
         return _size;
+    }
+
+    /** Sets the current length of this String. */
+    method void setLength(int newLength) {
+        let _size = newLength;
+        return;
     }
 
     /** Returns the character at location j. */
