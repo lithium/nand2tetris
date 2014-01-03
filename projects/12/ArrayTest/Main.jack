@@ -31,9 +31,24 @@ class Main {
         let b = Array.new(3);
         let b[0] = c[499] - 90;
         let r[3] = b[0];              // RAM[8003] = 10
-        
+
         do c.dispose();
         do b.dispose();
+
+
+
+        let a = 8010;
+        let a[0] = 1;
+        let a[1] = 1;
+        let a[2] = 2;
+        let a[3] = 3;
+        let a[4] = 5;
+        let a[5] = 8;
+
+        let r = 8010;
+        do Array.copy(r, a+2, 4);
+
+
         
         return;
     }

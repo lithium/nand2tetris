@@ -6,7 +6,8 @@
 load,
 output-file ArrayTest.out,
 compare-to ArrayTest.cmp,
-output-list RAM[8000]%D2.6.1 RAM[8001]%D2.6.1 RAM[8002]%D2.6.1 RAM[8003]%D2.6.1;
+output-list RAM[8000]%D2.6.1 RAM[8001]%D2.6.1 RAM[8002]%D2.6.1 RAM[8003]%D2.6.1
+            RAM[8010]%D2.6.1 RAM[8011]%D2.6.1 RAM[8012]%D2.6.1 RAM[8013]%D2.6.1;
 
 repeat 1000000 {
   vmstep;
