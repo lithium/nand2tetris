@@ -162,6 +162,20 @@ class String {
     }
 
 
+    /** Replace all occurances of _c_ with _r_ in place. **/
+    method void replace(char c, char r)
+    {
+        var int i;
+        let i = 0;
+        while (i < _size) {
+            if (_str[i] = c) {
+                let _str[i] = r;
+            }
+            let i = i+1;
+        }
+        return;
+    }
+
     /** Returns the number of characters at the beginning of the string 
         that match any the characters in _match_ **/
     method int span(String match) {
