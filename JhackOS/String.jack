@@ -99,7 +99,43 @@ class String {
     /** Returns the integer value of this String until the first non
      *  numeric character. */
     method int intValue() {
-        return -1;
+        var int numDigits;
+        var int c;
+        var int ret;
+        var int mul;
+        var int i;
+        var int max;
+
+        let numDigits = span("-0123456789");
+
+        if (numDigits = 0) {
+            return -1;
+        }
+
+        if (_str[0] = 45) {    // '-'
+            let max = numDigits-1;
+        } else {
+            let max = numDigits;
+        }
+
+
+        let ret = 0;
+        let mul = 1;
+        let i = 0;
+        while (i < max) {
+            let c = _str[numDigits-1-i];
+            let c = c - 48;    // '0'
+
+            let ret = ret + (c*mul);
+
+            let i = i+1;
+            let mul = mul*10;
+        }
+
+        if (~(max = numDigits)) { // negative
+            return ret*-1;
+        }
+        return ret;
     }
 
     /** Sets this String to hold a representation of the given number. */
@@ -306,6 +342,12 @@ class String {
         return 0;
     }
 
+
+    function int parseInt(Array bytes, int maxLength)
+    {
+        // TODO
+        return -1;
+    }
 
 
 }
