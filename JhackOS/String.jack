@@ -117,6 +117,29 @@ class String {
     }
 
 
+    method int span(String match) {
+        var int i;
+        let i = 0;
+
+        while (~(match.indexOfChar(charAt(i), 0) = -1)) {
+            let i = i + 1;
+        }
+        return i;
+    }
+    method int rspan(String match) {
+        var int i;
+        var int c;
+
+        let i = length()-1;
+        let c = 0;
+
+        while (~(match.indexOfChar(charAt(i), 0) = -1)) {
+            let i = i - 1;
+            let c = c + 1;
+        }
+        return c;
+    }
+
     /** Return the pointer to the strings bytes. **/
     method Array bytes() {
         return _str;
@@ -159,14 +182,14 @@ class String {
 
     /** Find the last occurance of the char c in the string. 
      ** Returns -1 if not found **/
-    method int rightIndexOfChar(char c)
+    method int rightIndexOfChar(char c, int offset)
     {
         var int i;
         var int l;
 
         let l = length();
         let i = l-1;
-        while (i > 0 | i = 0) {
+        while (i > offset | i = offset) {
           if (c = charAt(i)) {
             return i;
           }

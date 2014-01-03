@@ -86,9 +86,8 @@ class Main {
         } else {
             do Output.printString("false");
         }
-        do Output.println();
 
-        do Output.printString("equals: false == ");
+        do Output.printString("   false == ");
         if (s.equals("Baz")) {
             do Output.printString("true");
         } else {
@@ -103,10 +102,9 @@ class Main {
 
         do Output.printString("indexOfChar: 3 == ");
         do Output.printInt(idx);
-        do Output.println();
 
         let idx = s.indexOf("Bar");
-        do Output.printString("indexOf: 4 == ");
+        do Output.printString("   4 == ");
         do Output.printInt(idx);
         do Output.println();
 
@@ -123,6 +121,25 @@ class Main {
         do Output.printInt(idx);
         do Output.println();
 
+
+        let s = "  \tFoobarquuu";
+        let idx = s.span(" \t");
+        do Output.printString("span: 3 == ");
+        do Output.printInt(idx);
+
+        let idx = s.span("F");
+        do Output.printString("   0 == ");
+        do Output.printInt(idx);
+        do Output.println();
+
+        let idx = s.rspan("u");
+        do Output.printString("rspan: 3 == ");
+        do Output.printInt(idx);
+
+        let idx = s.rspan("z");
+        do Output.printString("   0 == ");
+        do Output.printInt(idx);
+        do Output.println();
 
 
         let s = "Foobar";
