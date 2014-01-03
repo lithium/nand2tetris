@@ -26,13 +26,13 @@ class ArrayList
     return;
   }
 
-  method void add(Void str)
+  method void add(Void obj)
   {
     if ((_size+1 > _capacity) | (_size+1 = _capacity)) {
       do resize(_capacity*2);
     }
 
-    let _array[_size] = str;
+    let _array[_size] = obj;
     let _size = _size + 1;
     return;
   }

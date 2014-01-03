@@ -3,12 +3,12 @@
 
 class Jhasm 
 {
-  field Array _symbolKeys;
-  field Array _symbolValues;
+  field SymbolTable _symbols;
 
 
   constructor Jhasm new()
   {
+    let _symbols = SymbolTable.new();
 
     return this; 
   } 
@@ -91,16 +91,10 @@ class Jhasm
         }
 
         let label = line.subString(labelStart+1, labelEnd - labelStart-1);
-        let lineno = ret.size();
-        do Output.printString("label: ");
-        do Output.printString(label);
-        do Output.printString("  :");
-        do Output.printInt(lineno);
-        do Output.println();
+        do _symbols.setSymbol(label, ret.size());
       } 
 
-
-      // add it if its non-empty and it wasnt a label
+      // add line if it wasnt a label and its not empty
       if ((label = null) & (line.length() > 0)) {
         do ret.add(line);
       }
@@ -118,4 +112,5 @@ class Jhasm
   {
     return instruction;
   }
+
 }

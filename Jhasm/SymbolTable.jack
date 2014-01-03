@@ -1,0 +1,114 @@
+
+
+class SymbolTable {
+  static ArrayList _BUILTINS;
+
+  field ArrayList _keys;
+  field ArrayList _values;
+  field int _variableAddress;
+
+
+  constructor SymbolTable new() {
+    let _keys = ArrayList.new(5);
+    let _values = ArrayList.new(5);
+    let _variableAddress = 16;
+
+    if (_BUILTINS = null) {
+      do SymbolTable.init();
+    }
+
+    return this; 
+  }
+
+  method void setSymbol(String symbol, int address)
+  {
+    var int idx;
+    let idx = _keys.indexOf(symbol);
+    if (idx = -1) {
+      do _keys.add(symbol);
+      do _values.add(address);
+    } else {
+      let _values[idx] = address;
+    }
+    return;
+  }
+
+  method int resolveBuiltin(String symbol) 
+  {
+    var int idx;
+    var int addr;
+
+    if (symbol.equals("SCREEN")) {
+      return 16384;
+    }
+    if (symbol.equals("KBD")) {
+      return 24576;
+    }
+
+    let idx = _BUILTINS.indexOf(symbol);
+    if (~(idx = -1)) {
+      if (idx < 5) {
+        // SP, LCL, ARG, THIS, THAT
+        return idx;
+      }
+      // R0..R15
+      let idx = idx - 5;
+      return idx;
+    }
+
+    return -1;
+  }
+
+  method int resolveSymbol(String symbol)
+  {
+    var int idx;
+    var int addr;
+
+    // check if a pre-defined symbol
+    let idx = resolveBuiltin(symbol);
+    if (~(idx = -1)) {
+      return idx;
+    }
+
+    let idx = _keys.indexOf(symbol);
+    if (idx = -1) {
+      // unknown symbol, assign it a variable address and add it
+      let addr = _variableAddress;
+      let _variableAddress = _variableAddress + 1;
+      do setSymbol(symbol, addr);
+    } else {
+      // return symbol address
+      let addr = _values[idx];
+    }
+    return addr;
+  }
+
+
+  /** initializes the builtin symbols list **/
+  function void init() {
+    let _BUILTINS = ArrayList.new(7);
+    do _BUILTINS.add("SP");
+    do _BUILTINS.add("LOCAL");
+    do _BUILTINS.add("ARG");
+    do _BUILTINS.add("THIS");
+    do _BUILTINS.add("THAT");
+    do _BUILTINS.add("R0");
+    do _BUILTINS.add("R1");
+    do _BUILTINS.add("R1");
+    do _BUILTINS.add("R2");
+    do _BUILTINS.add("R3");
+    do _BUILTINS.add("R4");
+    do _BUILTINS.add("R5");
+    do _BUILTINS.add("R6");
+    do _BUILTINS.add("R7");
+    do _BUILTINS.add("R8");
+    do _BUILTINS.add("R9");
+    do _BUILTINS.add("R10");
+    do _BUILTINS.add("R11");
+    do _BUILTINS.add("R12");
+    do _BUILTINS.add("R13");
+    do _BUILTINS.add("R14");
+    do _BUILTINS.add("R15");
+    return;
+  }
+}
