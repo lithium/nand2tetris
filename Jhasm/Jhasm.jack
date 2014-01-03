@@ -5,11 +5,11 @@ class Jhasm
 {
   field Array _symbolKeys;
   field Array _symbolValues;
-  field StringList _lines;
 
 
   constructor Jhasm new()
   {
+
     return this; 
   } 
 
@@ -19,19 +19,21 @@ class Jhasm
   method StringList assemble(StringList inText)
   {
     var StringList out;
+    var StringList scrubbed;
     var int i;
     var int l;
     var String line;
 
-    do _scrubInput(inText);
-    do _buildSymbolTable();
+    let scrubbed = firstPass(inText);
 
+
+    /* Second Pass: compile each instruction */
     let i = 0;
-    let l = _lines.size();
+    let l = scrubbed.size();
     let out = StringList.new(l);
 
     while (i < l) {
-      do out.add( _compileInstruction(_lines.get(i)) );
+      do out.add( _compileInstruction(scrubbed.get(i)) );
       let i = i + 1;
     }
 
@@ -39,29 +41,27 @@ class Jhasm
   }
 
   /*
-   * Build a table of all symbols used (first-pass)
+   * First Pass:
+   *  - strip comments and blank lines
+   *  - builds symbol table and strips label lines
+   * Returns a new StringList of instructions that should map 1to1 to machine code.
    */
-  method boolean _buildSymbolTable()
+  method StringList firstPass(StringList input) 
   {
-    if (_lines = null) {
-      return false;
-    }
-
-    return true;
-  } 
-
-  /*
-   * Strips comments and blank lines from input
-   */
-  method void _scrubInput(StringList input) 
-  {
+    var StringList ret;
     var int i;
     var int l;
     var String line;
     var int idx;
+    var int labelStart, labelEnd;
+    var String label;
+    var int lineno;
 
     let l = input.size();
-    let _lines = StringList.new(l);
+    if (l < 1) {
+      return null;
+    }
+    let ret = StringList.new(l);
 
     let i = 0;
     while (i < l) {
@@ -77,14 +77,38 @@ class Jhasm
       do line.rstrip(" \t");
       do line.lstrip(" \t");
 
-      if ((idx < line.length()) & (line.length() > 0)) {
-        do _lines.add(line);
+      // check if its a label
+      let label = null;
+      let labelStart = line.indexOfChar(40, 0);    // '('
+      if (~(labelStart = -1)) {
+        let labelEnd = line.indexOfChar(41, labelStart);  // ')'
+        if (labelStart = -1) {
+          do Output.printString("Invalid label on line ");
+          do Output.printInt(ret.size());
+          do Output.println();
+          do ret.dispose();
+          return null;
+        }
+
+        let label = line.subString(labelStart+1, labelEnd - labelStart-1);
+        let lineno = ret.size();
+        do Output.printString("label: ");
+        do Output.printString(label);
+        do Output.printString("  :");
+        do Output.printInt(lineno);
+        do Output.println();
+      } 
+
+
+      // add it if its non-empty and it wasnt a label
+      if ((label = null) & (line.length() > 0)) {
+        do ret.add(line);
       }
 
       let i = i + 1;
     }
 
-    return;
+    return ret;
   }
 
   /*
