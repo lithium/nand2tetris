@@ -2,11 +2,11 @@
 
 class Main {
 
-  function StringList readLines(int fh) {
-    var StringList lines;
+  function ArrayList readLines(int fh) {
+    var ArrayList lines;
     var String line;
 
-    let lines = StringList.new(2);
+    let lines = ArrayList.new(2);
 
     while (File.ready(fh) = 1) {
       let line = File.readln(fh);
@@ -49,8 +49,8 @@ class Main {
   function void main() {
     var String inputFile, outputFile;
     var int fh;
-    var StringList lines;
-    var StringList compiled;
+    var ArrayList lines;
+    var ArrayList compiled;
     var Jhasm jhasm;
     var String s;
 

@@ -1,17 +1,17 @@
 
 /*
- * Mutable list of strings
+ * Resizable array
  */
 
-class StringList
+class ArrayList
 {
-  field Array _strings;
+  field Array _array;
   field int _capacity;
   field int _size;
 
-  constructor StringList new(int capacity)
+  constructor ArrayList new(int capacity)
   {
-    let _strings = Array.new(capacity);
+    let _array = Array.new(capacity);
     let _size = 0;
     let _capacity = capacity;
     return this;
@@ -19,26 +19,26 @@ class StringList
 
   method void dispose()
   {
-    do _strings.dispose();
-    let _strings = null;
+    do _array.dispose();
+    let _array = null;
     let _size = 0;
     let _capacity = 0;
     return;
   }
 
-  method void add(String str)
+  method void add(Void str)
   {
     if ((_size+1 > _capacity) | (_size+1 = _capacity)) {
       do resize(_capacity*2);
     }
 
-    let _strings[_size] = str;
+    let _array[_size] = str;
     let _size = _size + 1;
     return;
   }
 
-  method String get(int index) {
-    return _strings[index];
+  method Void get(int index) {
+    return _array[index];
   }
 
   method int size() {
@@ -53,11 +53,11 @@ class StringList
     let arr = Array.new(newCapacity);
     let i = 0;
     while (i < _size) {
-      let arr[i] = _strings[i];
+      let arr[i] = _array[i];
       let i = i + 1;
     }
-    do _strings.dispose();
-    let _strings = arr;
+    do _array.dispose();
+    let _array = arr;
     let _capacity = newCapacity;
 
     return;
@@ -70,7 +70,7 @@ class StringList
 
     let i = 0;
     while (i < _size) {
-      let s = _strings[i];
+      let s = _array[i];
       if (s.equals(str)) {
         return i;
       }

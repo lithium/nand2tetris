@@ -14,12 +14,12 @@ class Jhasm
   } 
 
   /*
-   * Assemble source lines and return a StringList of Hack binary
+   * Assemble source lines and return a ArrayList of Hack binary
    */
-  method StringList assemble(StringList inText)
+  method ArrayList assemble(ArrayList inText)
   {
-    var StringList out;
-    var StringList scrubbed;
+    var ArrayList out;
+    var ArrayList scrubbed;
     var int i;
     var int l;
     var String line;
@@ -30,7 +30,7 @@ class Jhasm
     /* Second Pass: compile each instruction */
     let i = 0;
     let l = scrubbed.size();
-    let out = StringList.new(l);
+    let out = ArrayList.new(l);
 
     while (i < l) {
       do out.add( _compileInstruction(scrubbed.get(i)) );
@@ -44,11 +44,11 @@ class Jhasm
    * First Pass:
    *  - strip comments and blank lines
    *  - builds symbol table and strips label lines
-   * Returns a new StringList of instructions that should map 1to1 to machine code.
+   * Returns a new ArrayList of instructions that should map 1to1 to machine code.
    */
-  method StringList firstPass(StringList input) 
+  method ArrayList firstPass(ArrayList input) 
   {
-    var StringList ret;
+    var ArrayList ret;
     var int i;
     var int l;
     var String line;
@@ -61,7 +61,7 @@ class Jhasm
     if (l < 1) {
       return null;
     }
-    let ret = StringList.new(l);
+    let ret = ArrayList.new(l);
 
     let i = 0;
     while (i < l) {
