@@ -27,8 +27,6 @@ class SymbolTable {
     if (idx = -1) {
       do _keys.add(symbol);
       do _values.add(address);
-    } else {
-      let _values[idx] = address;
     }
     return;
   }
@@ -78,7 +76,7 @@ class SymbolTable {
       do setSymbol(symbol, addr);
     } else {
       // return symbol address
-      let addr = _values[idx];
+      let addr = _values.get(idx);
     }
     return addr;
   }

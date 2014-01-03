@@ -23,6 +23,15 @@ class String {
         return this;
     }
 
+
+    constructor String newFromBytes(Array bytes, int length)
+    {
+        let _str = bytes;
+        let _size = length;
+        let _capacity = length;
+        return this;
+    }
+
     function String copy(String string) {
         var String ret;
         var int l;

@@ -110,7 +110,54 @@ class Jhasm
    */
   method String _compileInstruction(String instruction)
   {
+    var String address;
+    var int addr;
+
+    if (instruction.charAt(0) = 64) {   // '@'
+      // A- Instruction
+
+      let address = String.newFromBytes(instruction.bytes()+1, instruction.length()-1);
+      let addr = address.intValue();
+      if (addr = -1) {
+        // no integer constant, assume its a symbol
+        let addr = _symbols.resolveSymbol(address);
+      }
+
+      return Jhasm.binaryString(addr);
+    }
+
+    // C- Instruction
     return instruction;
   }
 
+
+
+  /* static funtions */
+
+  function String binaryString(int word)
+  {
+    var String ret;
+    var int i;
+    var int mask;
+
+    let ret = String.new(16);
+    let mask = 1;
+    let i = 0;
+    while (i < 16) {
+      if (word & mask) {
+        do ret.setCharAt(15-i, 49);    // '1'
+      } else {
+        do ret.setCharAt(15-i, 48);    // '0'
+      }
+
+      if (mask = 1) {
+        let mask = 2;
+      } else {
+        let mask = mask * mask;
+      }
+      let i = i + 1;
+    }
+    do ret.setLength(16);
+    return ret;
+  }
 }
