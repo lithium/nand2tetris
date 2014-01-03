@@ -69,10 +69,10 @@ class Main {
 
 
 
-    do Output.printString("Assembling: ");
+    do Output.printString(" IN:");
     do Output.printString(inputFile);
     do Output.println();
-    do Output.printString("Into: ");
+    do Output.printString("OUT:");
     do Output.printString(outputFile);
     do Output.println();
 
