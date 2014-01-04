@@ -46,6 +46,8 @@ class Jhasm
     let COMP_AMD = "A-D";
     let COMP_DANDA = "D&A";
     let COMP_DORA = "D|A";
+
+    do SymbolTable.init();
     return;
   }
 

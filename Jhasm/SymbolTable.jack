@@ -2,6 +2,7 @@
 
 class SymbolTable {
   static ArrayList _BUILTINS;
+  static String SCREEN, KBD;
 
   field ArrayList _keys;
   field ArrayList _values;
@@ -12,10 +13,6 @@ class SymbolTable {
     let _keys = ArrayList.new(5);
     let _values = ArrayList.new(5);
     let _variableAddress = 16;
-
-    if (_BUILTINS = null) {
-      do SymbolTable.init();
-    }
 
     return this; 
   }
@@ -36,10 +33,10 @@ class SymbolTable {
     var int idx;
     var int addr;
 
-    if (symbol.equals("SCREEN")) {
+    if (symbol.equals(SCREEN)) {
       return 16384;
     }
-    if (symbol.equals("KBD")) {
+    if (symbol.equals(KBD)) {
       return 24576;
     }
 
@@ -107,6 +104,9 @@ class SymbolTable {
     do _BUILTINS.add("R13");
     do _BUILTINS.add("R14");
     do _BUILTINS.add("R15");
+
+    let SCREEN = "SCREEN";
+    let KBD = "KBD";
     return;
   }
 }
