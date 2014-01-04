@@ -251,10 +251,10 @@ class Jhasm
     var int i;
     var int c;
 
-    let i = comp.indexOfChar(65, 0);    // 'A'
-    if (i = -1) {
+    let i = comp.indexOfChar(77, 0);    // 'M'
+    if (~(i = -1)) {
       // Memory instruction
-      let c = 4096;
+      let c = 64;
       do comp.replace(77, 65);   // replace 'M' with 'A'
     } else {
       // Accumulator instruction
