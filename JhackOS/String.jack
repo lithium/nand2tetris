@@ -25,6 +25,18 @@ class String {
         return this;
     }
 
+    /** de-allocates the string and frees its space. */
+    method void dispose() {
+        if (~(_str = null)) {
+            do _str.dispose();
+            let _str = null;
+        }
+        let _size = 0;
+        let _capacity = 0;
+        do Memory.deAlloc(this);
+        return;
+    }
+
     function void init() {
         let DIGITS = "-0123456789";
         return;
@@ -47,17 +59,6 @@ class String {
         do Array.copy(ret.bytes(), string.bytes(), l);
         do ret.setLength(l);
         return ret;
-    }
-
-    /** De-allocates the string and frees its space. */
-    method void dispose() {
-        if (~(_str = null)) {
-            do _str.dispose();
-            let _str = null;
-        }
-        let _size = 0;
-        let _capacity = 0;
-        return;
     }
 
     /** Returns the current length of this String. */

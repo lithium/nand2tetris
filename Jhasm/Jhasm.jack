@@ -61,11 +61,10 @@ class Jhasm
   } 
 
   /*
-   * Assemble source lines and return a ArrayList of Hack binary
+   * read Hack assembly from file inPath and write Hack machine code to outPath. 
    */
   method void assemble(String inPath, String outPath)
   {
-    var ArrayList out;
     var int i;
     var int l;
     var String line;
@@ -145,11 +144,13 @@ class Jhasm
     while (File.ready(_in) = 1) {
       let line = File.readln(_in);
 
+
       do Jhasm.stripWhitespace(line);
       let labelStart = line.indexOfChar(40, 0);    // '('
 
       // not a label and non-empty
       if ((labelStart = -1) & (line.length() > 0)) {
+
         let compiled = _compileInstruction(line);
         if (compiled = null) {
           do Output.printString(line);
@@ -157,12 +158,12 @@ class Jhasm
           do Output.printInt(lineno);
           do Output.println();
           return;
-        } else {
-          do compiled.appendChar(10);     // '\n'
-          do File.write(_out, compiled);
-        }
-        let lineno = lineno+1;
+        } 
+
+        do compiled.appendChar(10);     // '\n'
+        do File.write(_out, compiled);
         do compiled.dispose();
+        let lineno = lineno+1;
       }
       do line.dispose();
     }
