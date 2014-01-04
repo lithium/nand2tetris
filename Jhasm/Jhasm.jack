@@ -213,6 +213,7 @@ class Jhasm
         // no integer constant, assume its a symbol
         let addr = _symbols.resolveSymbol(address);
       }
+      do Memory.deAlloc(address);
 
       return Jhasm.binaryString(addr);
     }
@@ -234,6 +235,9 @@ class Jhasm
 
       let d = Jhasm.destFromMneumonic(dest);
       let c = Jhasm.compFromMneumonic(comp);
+
+      do Memory.deAlloc(comp);
+      do Memory.deAlloc(dest);
     } else {
       if (~(jumpIdx = -1)) {
         // jump instruction
@@ -243,6 +247,9 @@ class Jhasm
 
         let c = Jhasm.compFromMneumonic(comp);
         let j = Jhasm.jumpFromMneumonic(jump);
+
+        do Memory.deAlloc(comp);
+        do Memory.deAlloc(jump);
       } else {
         // invalid instruction
         return null;
