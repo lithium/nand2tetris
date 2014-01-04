@@ -2,20 +2,6 @@
 
 class Main {
 
-  function ArrayList readLines(int fh) {
-    var ArrayList lines;
-    var String line;
-
-    let lines = ArrayList.new(2);
-
-    while (File.ready(fh) = 1) {
-      let line = File.readln(fh);
-      do lines.add(line);
-    }
-
-    return lines;
-  }
-
   function void usage() {
     do Output.printString("Usage: jhasm <file.asm>");
     do Output.println();
@@ -47,61 +33,32 @@ class Main {
   } 
 
   function void main() {
-    var String inputFile, outputFile;
-    var int fh;
-    var ArrayList lines;
-    var ArrayList compiled;
+    var String inputPath, outputPath;
     var Jhasm jhasm;
-    var String s;
 
-    var int i;
-    var int idx;
-    var Array b;
+    
+    do String.init();
+    do Jhasm.init();
 
     // Parse .asm file from command-line arguments
     if (Sys.argumentCount() < 1) {
       do Main.usage();
       return;
     }
-    let inputFile = Sys.argument(0);
-    let outputFile = Main.hackFilename(inputFile);
-
-
+    let inputPath = Sys.argument(0);
+    let outputPath = Main.hackFilename(inputPath);
 
 
     do Output.printString(" IN:");
-    do Output.printString(inputFile);
+    do Output.printString(inputPath);
     do Output.println();
     do Output.printString("OUT:");
-    do Output.printString(outputFile);
+    do Output.printString(outputPath);
     do Output.println();
 
-    // read in contents of file 
-    let fh = File.open(inputFile, 0);
-    let lines = Main.readLines(fh);
-    do File.close(fh);
 
-    // translate assembly 
-    do Jhasm.init();
     let jhasm = Jhasm.new();
-    let compiled = jhasm.assemble(lines);
-    if (compiled = null) {
-      return;
-    }
-
-    // write out to new file
-    let fh = File.open(outputFile, 1);
-    let i = 0;
-    while (i < compiled.size()) {
-      let s = compiled.get(i);
-      do Output.printString(s);
-      do Output.println();
-      do s.appendChar(10);     // '\n'
-      do File.write(fh, s);
-      let i = i + 1;
-    }
-    do File.close(fh);
-
+    do jhasm.assemble(inputPath, outputPath);
 
 
     return;

@@ -70,7 +70,7 @@ class SymbolTable {
       // unknown symbol, assign it a variable address and add it
       let addr = _variableAddress;
       let _variableAddress = _variableAddress + 1;
-      do setSymbol(symbol, addr);
+      do setSymbol(String.copy(symbol), addr);
     } else {
       // return symbol address
       let addr = _values.get(idx);
@@ -109,4 +109,21 @@ class SymbolTable {
     let KBD = "KBD";
     return;
   }
+
+  method void dump() {
+    var int i;
+    var String s;
+
+    let i = 0;
+    while (i < _keys.size()) {
+      let s = _keys.get(i);
+      do Output.printString(s);
+      do Output.printString(" = ");
+      do Output.printInt(_values.get(i));
+      do Output.println();
+      let i = i+1;
+    }
+    return;
+  }
+
 }

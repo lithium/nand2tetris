@@ -4,6 +4,7 @@
 class Jhasm 
 {
   field SymbolTable _symbols;
+  field int _in, _out;
 
   static String COMMENT, WHITESPACE;
   static String JMP, JLE, JNE, JLT, JGE, JEQ, JGT;
@@ -62,102 +63,130 @@ class Jhasm
   /*
    * Assemble source lines and return a ArrayList of Hack binary
    */
-  method ArrayList assemble(ArrayList inText)
+  method void assemble(String inPath, String outPath)
   {
     var ArrayList out;
-    var ArrayList scrubbed;
     var int i;
     var int l;
     var String line;
 
-    let scrubbed = firstPass(inText);
+    let _in = File.open(inPath, 0);
+
+    do Output.printString("First pass...");
+    do firstPass();
+    do File.close(_in);
 
 
-    /* Second Pass: compile each instruction */
-    let i = 0;
-    let l = scrubbed.size();
-    let out = ArrayList.new(l);
+    do Output.printString("Second pass...");
 
-    while (i < l) {
-      let line = _compileInstruction(scrubbed.get(i));
-      if (line = null) {
-        do Output.printString(scrubbed.get(i));
-        do Output.printString("Invalid instruction on line ");
-        do Output.printInt(i+1);
-        do Output.println();
-        return null;
-      }
-      do out.add(line);
-      let i = i + 1;
-    }
+    let _in = File.open(inPath, 0);
+    let _out = File.open(outPath, 1);
+    do secondPass();
+    do File.close(_out);
+    do File.close(_in);
 
-    return out;
+    return;
   }
 
   /*
    * First Pass:
-   *  - strip comments and blank lines
-   *  - builds symbol table and strips label lines
-   * Returns a new ArrayList of instructions that should map 1to1 to machine code.
+   *  - builds symbol table
    */
-  method ArrayList firstPass(ArrayList input) 
+  method void firstPass() 
   {
-    var ArrayList ret;
-    var int i;
-    var int l;
     var String line;
     var int idx;
     var int labelStart, labelEnd;
     var String label;
     var int lineno;
 
-    let l = input.size();
-    if (l < 1) {
-      return null;
-    }
-    let ret = ArrayList.new(l);
+    let lineno=0;
+    while (File.ready(_in) = 1) {
+      let line = File.readln(_in);
 
-    let i = 0;
-    while (i < l) {
-      let line = input.get(i); 
-
-      // strip comments
-      let idx = line.indexOf(COMMENT);
-      if (~(idx = -1)) {
-        do line.setLength(idx);
-      }
-
-      // strip whitespace
-      do line.rstrip(WHITESPACE);
-      do line.lstrip(WHITESPACE);
+      do Jhasm.stripWhitespace(line);
 
       // check if its a label
       let label = null;
       let labelStart = line.indexOfChar(40, 0);    // '('
       if (~(labelStart = -1)) {
         let labelEnd = line.indexOfChar(41, labelStart);  // ')'
-        if (labelStart = -1) {
+        if (labelEnd = -1) {
           do Output.printString("Invalid label on line ");
           do Output.printInt(ret.size());
           do Output.println();
           do ret.dispose();
-          return null;
+          return;
         }
 
         let label = line.subString(labelStart+1, labelEnd - labelStart-1);
-        do _symbols.setSymbol(label, ret.size());
+        do _symbols.setSymbol(label, lineno);
       } 
 
       // add line if it wasnt a label and its not empty
       if ((label = null) & (line.length() > 0)) {
-        do ret.add(line);
+        let lineno = lineno + 1;
       }
 
-      let i = i + 1;
+      do line.dispose();
     }
 
-    return ret;
+    return;
   }
+
+  /* Second Pass: compile each instruction */
+  method void secondPass() {
+    var String line;
+    var String compiled;
+    var int lineno;
+    var int labelStart;
+
+    let lineno=1;
+    while (File.ready(_in) = 1) {
+      let line = File.readln(_in);
+
+      do Jhasm.stripWhitespace(line);
+      let labelStart = line.indexOfChar(40, 0);    // '('
+
+      // not a label and non-empty
+      if ((labelStart = -1) & (line.length() > 0)) {
+        let compiled = _compileInstruction(line);
+        if (compiled = null) {
+          do Output.printString(line);
+          do Output.printString("Invalid instruction on line ");
+          do Output.printInt(lineno);
+          do Output.println();
+          return;
+        } else {
+          do compiled.appendChar(10);     // '\n'
+          do File.write(_out, compiled);
+        }
+        let lineno = lineno+1;
+        do compiled.dispose();
+      }
+      do line.dispose();
+    }
+    return;
+  }
+
+
+  function void stripWhitespace(String line) 
+  {
+    var int idx;
+
+    // strip comments
+    let idx = line.indexOf(COMMENT);
+    if (~(idx = -1)) {
+      do line.setLength(idx);
+    }
+
+    // strip whitespace
+    do line.rstrip(WHITESPACE);
+    do line.lstrip(WHITESPACE);
+
+    return;
+  }
+
 
   /*
    * Translate a Hack Assembler mneumonic into Hack Binary
@@ -315,15 +344,6 @@ class Jhasm
   {
     var Array b;
     let b = comp.bytes();
-    if (COMP_0.cmp(b, 1) = 0)     { return 42; }
-    if (COMP_1.cmp(b, 1) = 0)     { return 63; }
-    if (COMP_M1.cmp(b, 2) = 0)    { return 58; }
-    if (COMP_D.cmp(b, 1) = 0)     { return 12; }
-    if (COMP_A.cmp(b, 1) = 0)     { return 48; }
-    if (COMP_ND.cmp(b, 2) = 0)    { return 13; }
-    if (COMP_NA.cmp(b, 2) = 0)    { return 49; }
-    if (COMP_MD.cmp(b, 2) = 0)    { return 15; }
-    if (COMP_MA.cmp(b, 2) = 0)    { return 51; }
     if (COMP_D1.cmp(b, 3) = 0)    { return 31; }
     if (COMP_A1.cmp(b, 3) = 0)    { return 55; }
     if (COMP_DM1.cmp(b, 3) = 0)   { return 14; }
@@ -333,6 +353,15 @@ class Jhasm
     if (COMP_AMD.cmp(b, 3) = 0)   { return 7; }
     if (COMP_DANDA.cmp(b, 3) = 0) { return 0; }
     if (COMP_DORA.cmp(b, 3) = 0)  { return 21; }
+    if (COMP_M1.cmp(b, 2) = 0)    { return 58; }
+    if (COMP_ND.cmp(b, 2) = 0)    { return 13; }
+    if (COMP_NA.cmp(b, 2) = 0)    { return 49; }
+    if (COMP_MD.cmp(b, 2) = 0)    { return 15; }
+    if (COMP_MA.cmp(b, 2) = 0)    { return 51; }
+    if (COMP_0.cmp(b, 1) = 0)     { return 42; }
+    if (COMP_1.cmp(b, 1) = 0)     { return 63; }
+    if (COMP_D.cmp(b, 1) = 0)     { return 12; }
+    if (COMP_A.cmp(b, 1) = 0)     { return 48; }
     return -1;
   }
 }

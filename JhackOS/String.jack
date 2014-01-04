@@ -11,6 +11,8 @@ class String {
     field int _capacity;
     field int _size;
 
+    static String DIGITS;
+
     /** Constructs a new empty String with a maximum length of maxLength. */
     constructor String new(int maxLength) {
         let _capacity = maxLength;
@@ -23,6 +25,10 @@ class String {
         return this;
     }
 
+    function void init() {
+        let DIGITS = "-0123456789";
+        return;
+    }
 
     constructor String newFromBytes(Array bytes, int length)
     {
@@ -106,7 +112,7 @@ class String {
         var int i;
         var int max;
 
-        let numDigits = span("-0123456789");
+        let numDigits = span(DIGITS);
 
         if (numDigits = 0) {
             return -1;
@@ -360,12 +366,6 @@ class String {
         return 0;
     }
 
-
-    function int parseInt(Array bytes, int maxLength)
-    {
-        // TODO
-        return -1;
-    }
 
 
 }
