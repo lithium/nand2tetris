@@ -5,6 +5,50 @@ class Jhasm
 {
   field SymbolTable _symbols;
 
+  static String COMMENT, WHITESPACE;
+  static String JMP, JLE, JNE, JLT, JGE, JEQ, JGT;
+
+  static String COMP_0,   COMP_1, COMP_M1, 
+                COMP_D,   COMP_A, 
+                COMP_ND,  COMP_NA, 
+                COMP_MD,  COMP_MA,
+                COMP_D1,  COMP_A1,
+                COMP_DM1, COMP_AM1,
+                COMP_DA,  COMP_DMA, COMP_AMD,
+                COMP_DANDA, COMP_DORA;
+
+  function void init() {
+    let COMMENT = "//";
+    let WHITESPACE = " \t";
+    let JMP = "JMP";
+    let JLE = "JLE";
+    let JNE = "JNE";
+    let JLT = "JLT";
+    let JGE = "JGE";
+    let JEQ = "JEQ";
+    let JGT = "JGT";
+
+    let COMP_0 = "0";
+    let COMP_1 = "1";
+    let COMP_M1 = "-1";
+    let COMP_D = "D";
+    let COMP_A = "A";
+    let COMP_ND = "!D";
+    let COMP_NA = "!A";
+    let COMP_MD = "-D";
+    let COMP_MA = "-A";
+    let COMP_D1 = "D+1";
+    let COMP_A1 = "A+1";
+    let COMP_DM1 = "D-1";
+    let COMP_AM1 = "A-1";
+    let COMP_DA = "D+A";
+    let COMP_DMA = "D-A";
+    let COMP_AMD = "A-D";
+    let COMP_DANDA = "D&A";
+    let COMP_DORA = "D|A";
+    return;
+  }
+
 
   constructor Jhasm new()
   {
@@ -76,14 +120,14 @@ class Jhasm
       let line = input.get(i); 
 
       // strip comments
-      let idx = line.indexOf("//");
+      let idx = line.indexOf(COMMENT);
       if (~(idx = -1)) {
         do line.setLength(idx);
       }
 
       // strip whitespace
-      do line.rstrip(" \t");
-      do line.lstrip(" \t");
+      do line.rstrip(WHITESPACE);
+      do line.lstrip(WHITESPACE);
 
       // check if its a label
       let label = null;
@@ -235,14 +279,15 @@ class Jhasm
 
   function int jumpFromMneumonic(String jump)
   {
-    if (jump.equals("JMP")) { return 7; }
-    if (jump.equals("JLE")) { return 6; }
-    if (jump.equals("JNE")) { return 5; }
-    if (jump.equals("JLT")) { return 4; }
-    if (jump.equals("JGE")) { return 3; }
-    if (jump.equals("JEQ")) { return 2; }
-    if (jump.equals("JGT")) { return 1; }
-
+    var Array b;
+    let b = jump.bytes();
+    if (JMP.cmp(b, 3) = 0) { return 7; }
+    if (JLE.cmp(b, 3) = 0) { return 6; }
+    if (JNE.cmp(b, 3) = 0) { return 5; }
+    if (JLT.cmp(b, 3) = 0) { return 4; }
+    if (JGE.cmp(b, 3) = 0) { return 3; }
+    if (JEQ.cmp(b, 3) = 0) { return 2; }
+    if (JGT.cmp(b, 3) = 0) { return 1; }
     return 0;
   }  
 
@@ -266,24 +311,26 @@ class Jhasm
 
   function int acompFromMneumonic(String comp)
   {
-    if (comp.equals("0"))   { return 42; }
-    if (comp.equals("1"))   { return 63; }
-    if (comp.equals("-1"))  { return 58; }
-    if (comp.equals("D"))   { return 12; }
-    if (comp.equals("A"))   { return 48; }
-    if (comp.equals("!D"))  { return 13; }
-    if (comp.equals("!A"))  { return 49; }
-    if (comp.equals("-D"))  { return 15; }
-    if (comp.equals("-A"))  { return 51; }
-    if (comp.equals("D+1")) { return 31; }
-    if (comp.equals("A+1")) { return 55; }
-    if (comp.equals("D-1")) { return 14; }
-    if (comp.equals("A-1")) { return 50; }
-    if (comp.equals("D+A")) { return 2; }
-    if (comp.equals("D-A")) { return 19; }
-    if (comp.equals("A-D")) { return 7; }
-    if (comp.equals("D&A")) { return 0; }
-    if (comp.equals("D|A")) { return 21; }
+    var Array b;
+    let b = comp.bytes();
+    if (COMP_0.cmp(b, 1) = 0)     { return 42; }
+    if (COMP_1.cmp(b, 1) = 0)     { return 63; }
+    if (COMP_M1.cmp(b, 2) = 0)    { return 58; }
+    if (COMP_D.cmp(b, 1) = 0)     { return 12; }
+    if (COMP_A.cmp(b, 1) = 0)     { return 48; }
+    if (COMP_ND.cmp(b, 2) = 0)    { return 13; }
+    if (COMP_NA.cmp(b, 2) = 0)    { return 49; }
+    if (COMP_MD.cmp(b, 2) = 0)    { return 15; }
+    if (COMP_MA.cmp(b, 2) = 0)    { return 51; }
+    if (COMP_D1.cmp(b, 3) = 0)    { return 31; }
+    if (COMP_A1.cmp(b, 3) = 0)    { return 55; }
+    if (COMP_DM1.cmp(b, 3) = 0)   { return 14; }
+    if (COMP_AM1.cmp(b, 3) = 0)   { return 50; }
+    if (COMP_DA.cmp(b, 3) = 0)    { return 2; }
+    if (COMP_DMA.cmp(b, 3) = 0)   { return 19; }
+    if (COMP_AMD.cmp(b, 3) = 0)   { return 7; }
+    if (COMP_DANDA.cmp(b, 3) = 0) { return 0; }
+    if (COMP_DORA.cmp(b, 3) = 0)  { return 21; }
     return -1;
   }
 }

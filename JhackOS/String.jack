@@ -306,7 +306,7 @@ class String {
                 return -1;
             }
 
-            if (String.cmp(_str+idx, b, l) = 0) {
+            if (String.strcmp(_str+idx, b, l) = 0) {
                 return idx;
             }
         }
@@ -336,10 +336,14 @@ class String {
 
 
     method int compare(int offset, String other, int otherOffset, int maxLength) {
-        return String.cmp(_str+offset, other.bytes()+otherOffset, maxLength);
+        return String.strcmp(_str+offset, other.bytes()+otherOffset, maxLength);
     }
 
-    function int cmp(Array s1, Array s2, int maxLength)
+    method int cmp(Array s2, int maxLength) {
+        return String.strcmp(_str, s2, maxLength);
+    }
+
+    function int strcmp(Array s1, Array s2, int maxLength)
     {
         var char c;
         var int i;

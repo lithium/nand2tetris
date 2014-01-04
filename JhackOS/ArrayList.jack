@@ -41,6 +41,11 @@ class ArrayList
     return _array[index];
   }
 
+  method void set(int index, Void obj) {
+    let _array[index] = obj;
+    return;
+  }
+
   method int size() {
     return _size;
   }
