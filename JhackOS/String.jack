@@ -189,7 +189,7 @@ class String {
         var int i;
         let i = 0;
 
-        while (~(match.indexOfChar(charAt(i), 0) = -1)) {
+        while ((i < _size) & ~(match.indexOfChar(charAt(i), 0) = -1)) {
             let i = i + 1;
         }
         return i;
@@ -261,11 +261,9 @@ class String {
     method int indexOfChar(char c, int offset)
     {
         var int i;
-        var int l;
 
-        let l = length();
         let i = offset;
-        while (i < l) {
+        while (i < _size) {
             if (c = charAt(i)) {
                 return i;
             }
@@ -357,11 +355,20 @@ class String {
 
 
     method int compare(int offset, String other, int otherOffset, int maxLength) {
+        var int ol;
+        let ol = other.length();
+
         if (offset < 0) {
             let offset = _size + offset;
         }
         if (otherOffset < 0) {
-            let otherOffset = other.length() + otherOffset;
+            let otherOffset = ol + otherOffset;
+        }
+        if (maxLength+offset > _size) {
+            let maxLength = _size-offset;
+        }
+        if (maxLength+otherOffset > ol) {
+            let maxLength = ol-otherOffset;
         }
         return String.strcmp(_str+offset, other.bytes()+otherOffset, maxLength);
     }
