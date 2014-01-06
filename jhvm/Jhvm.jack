@@ -185,13 +185,28 @@ class Jhvm {
           let arg1 = _parseArgument1(line);
           do _call(arg1, _parseArgument2(line));
         } else {
+        if (line.compare(0, LABEL, 0, 5) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _label(arg1);
+        } else {
+        if (line.compare(0, GOTO, 0, 4) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _goto(arg1);
+        } else {
+        if (line.compare(0, IFGOTO, 0, 6) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _if_goto(arg1);
+        } else {
+        if (line.compare(0, RETURN, 0, 6) = 0) {
+          do _return();
+        } else {
         if (line.compare(0, ADD, 0, 3) = 0) {
           do _add();
         } else {
           do Output.printString("unhandled: ");
           do Output.printString(line);
           do Output.println();
-        }}}}}
+        }}}}}}}}}
 
         if (~(arg1 = null)) {
           do arg1.dispose();
@@ -245,22 +260,80 @@ class Jhvm {
     return ret;
   }
 
+  method int _resolveSegmentAddress(String segment, int offset)
+  {
+    if (segment.compare(0, CONSTANT,0, 8) = 0) {
+      return offset;
+    }
 
-  method void _push(String segment, int offset) {
+    return -1;
+  }
+
+  method void _push(String segment, int offset) 
+  {
+    var int value;
+
     do Output.printString("Push segment:");
     do Output.printString(segment);
     do Output.printString(" offset:");
     do Output.printInt(offset);
     do Output.println();
+
+    let value = _resolveSegment(segment, offset);
+
+    //    @<value>
+    //    D=A
+    //    @SP
+    //    A=M
+    //    M=D
+    //    @SP
+    //    M=M+1
+
     return;
   }
 
   method void _pop(String segment, int offset) {
+    var int address;
+    let address = _resolveSegment(segment, offset);
+
     do Output.printString("Pop segment:");
     do Output.printString(segment);
     do Output.printString(" offset:");
     do Output.printInt(offset);
     do Output.println();
+
+    //  @SP           
+    //  M=M-1
+    //  A=M
+    //  D=M
+    //  @<address>    
+    //  M=D
+
+    return;
+  }
+
+  method void _add()
+  {
+    do Output.printString("Add");
+    do Output.println();
+
+
+    // D = *--SP
+    //    @SP    
+    //    M=M-1
+    //    A=M
+    //    D=M
+
+    // *SP++ = *--SP + D
+    //    @SP    
+    //    M=M-1
+    //    A=M
+    //    M=M+D
+    //    @SP
+    //    M=M+1
+
+
+
     return;
   }
 
@@ -294,10 +367,4 @@ class Jhvm {
     return;
   }
 
-  method void _add()
-  {
-    do Output.printString("Add");
-    do Output.println();
-    return;
-  }
 }
