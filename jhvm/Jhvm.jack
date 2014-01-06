@@ -2,6 +2,8 @@ class Jhvm {
   field String _outPath;
   field int _outfd;
 
+  field int _arg2idx;
+
   field int _SP;
 
   static String DOTASM;
@@ -143,7 +145,7 @@ class Jhvm {
   {
     var int fh;
     var String line;
-    var int idx;
+    var String arg1;
 
     do Output.printString(TRANSLATING);
     do Output.printString(filename);
@@ -160,17 +162,28 @@ class Jhvm {
 
       do Jhvm.stripWhitespace(line);
       if (line.length() > 0) {
-        do Output.printString("  ");
+      /*
+        do Output.printString("IN:");
         do Output.printString(line);
         do Output.println();
+      */
 
-        let idx = _nextTokenEnd(line, 0);
-
+        let arg1 = null;
         if (line.compare(0, PUSH, 0, 4) = 0) {
-          do _push(line, idx+1);
+          let arg1 = _parseArgument1(line);
+          do _push(arg1, _parseArgument2(line));
         } else {
         if (line.compare(0, POP, 0, 3) = 0) {
-          do _pop(line, idx+1);
+          let arg1 = _parseArgument1(line);
+          do _pop(arg1, _parseArgument2(line));
+        } else {
+        if (line.compare(0, FUNCTION, 0, 8) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _function(arg1, _parseArgument2(line));
+        } else {
+        if (line.compare(0, CALL, 0, 3) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _call(arg1, _parseArgument2(line));
         } else {
         if (line.compare(0, ADD, 0, 3) = 0) {
           do _add();
@@ -178,7 +191,12 @@ class Jhvm {
           do Output.printString("unhandled: ");
           do Output.printString(line);
           do Output.println();
-        }}}
+        }}}}}
+
+        if (~(arg1 = null)) {
+          do arg1.dispose();
+          let arg1 = null;
+        }
 
 
       }
@@ -205,40 +223,81 @@ class Jhvm {
     return;
   }
 
-  method void _push(String line, int argsStart) {
-    do _pushOrPop(true, line, argsStart);
-    return;
-  }
-  method void _pop(String line, int argsStart) {
-    do _pushOrPop(false, line, argsStart);
-    return;
-  }
-  method void _pushOrPop(boolean isPush, String line, int argsStart)
+  method String _parseArgument1(String line)
   {
+    var int argsStart;
     var int idx;
-    var String segment, offset;
-    var int ofs;
 
-    let idx = _nextTokenEnd(line, argsStart);
+    let argsStart = _nextTokenEnd(line, 0)+1;
+    let _arg2idx = _nextTokenEnd(line, argsStart)+1;
 
-    let segment = line.subString(argsStart, idx-argsStart);
-    let offset = line.subString(idx+1, line.length()-idx-1);
+    return line.subString(argsStart, _arg2idx - argsStart-1);
+  }
+  method int _parseArgument2(String line)
+  {
+    var String arg2;
+    var int ret;
 
-    do Output.printString("segment: ");
+    let arg2 = line.subString(_arg2idx, line.length()-_arg2idx);
+    let ret = arg2.intValue();
+    do arg2.dispose();
+
+    return ret;
+  }
+
+
+  method void _push(String segment, int offset) {
+    do Output.printString("Push segment:");
     do Output.printString(segment);
+    do Output.printString(" offset:");
+    do Output.printInt(offset);
     do Output.println();
-    do Output.printString("offset: ");
-    do Output.printInt(ofs);
-    do Output.println();
+    return;
+  }
 
-    do segment.dispose();
-    do offset.dispose();
+  method void _pop(String segment, int offset) {
+    do Output.printString("Pop segment:");
+    do Output.printString(segment);
+    do Output.printString(" offset:");
+    do Output.printInt(offset);
+    do Output.println();
+    return;
+  }
+
+  method void _function(String functionName, int nLocals)
+  {
+    return;
+  }
+
+  method void _call(String functionName, int nArgs)
+  {
+    return;
+  }
+
+  method void _return()
+  {
+    return;
+  }
+
+  method void _label(String symbol)
+  {
+    return;
+  }
+
+  method void _goto(String symbol)
+  {
+    return;
+  }
+
+  method void _if_goto(String symbol)
+  {
     return;
   }
 
   method void _add()
   {
-
+    do Output.printString("Add");
+    do Output.println();
     return;
   }
 }
