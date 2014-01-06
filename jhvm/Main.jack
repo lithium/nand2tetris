@@ -1,0 +1,57 @@
+
+
+class Main {
+
+  function void main() {
+    var String arg;
+    var Array files;
+    var int numFiles;
+    var int i;
+    var Jhvm jhvm;
+
+    if (Sys.argumentCount() < 1) {
+      do Output.printString("Usage: jhvm <file.vm | directory>");
+      do Output.println();
+      return;
+    }
+
+    do Jhvm.init();
+    let jhvm = Jhvm.new();
+    let arg = Sys.argument(0);
+
+    do Output.printString("Output: ");
+    do Output.printString(jhvm.setOutputPath(arg));
+    do Output.println();
+
+    if (arg.compare(-3, ".vm",0, 3) = 0) {
+      // passed a single file
+
+      do jhvm.translateFile(arg);
+
+    } else {
+      // assume it's a directory
+
+      let files = File.list(arg);
+      if (files = null) {
+        do Output.printString("Not a directory ");
+        do Output.printString(arg);
+        do Output.println();
+        return;
+      }
+      let numFiles = files[0];
+
+      let i = 0;
+      while (i < numFiles) {
+        let arg = files[i+1];
+        if (arg.compare(-3, ".vm",0, 3) = 0) {
+          do jhvm.translateFile(arg);
+        }
+
+        let i = i+1;
+      }
+
+    }
+
+    return;
+  }
+}
