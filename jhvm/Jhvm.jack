@@ -7,6 +7,32 @@ class Jhvm {
   static String SLASHES;
   static String TRANSLATING;
 
+  static String ADD;
+  static String SUB;
+  static String NEG;
+  static String EQ;
+  static String GT;
+  static String LT;
+  static String AND;
+  static String OR;
+  static String NOT;
+  static String PUSH;
+  static String POP;
+  static String ARGUMENT;
+  static String LOCAL;
+  static String STATIC;
+  static String CONSTANT;
+  static String THIS;
+  static String THAT;
+  static String POINTER;
+  static String TEMP;
+  static String LABEL;
+  static String GOTO;
+  static String IFGOTO;
+  static String FUNCTION;
+  static String CALL;
+  static String RETURN;
+
   constructor Jhvm new()
   {
     let _SP = 256;
@@ -19,6 +45,33 @@ class Jhvm {
     let DOTASM = ".asm";
     let SLASHES = "/\\";
     let TRANSLATING = "Translating ";
+
+    let ADD = "add";
+    let SUB = "sub";
+    let NEG = "neg";
+    let EQ = "eq";
+    let GT = "gt";
+    let LT = "lt";
+    let AND = "and";
+    let OR = "or";
+    let NOT = "not";
+    let PUSH = "push";
+    let POP = "pop";
+    let ARGUMENT = "argument";
+    let LOCAL = "local";
+    let STATIC = "static";
+    let CONSTANT = "constant";
+    let THIS = "this";
+    let THAT = "that";
+    let POINTER = "pointer";
+    let TEMP = "temp";
+    let LABEL = "label";
+    let GOTO = "goto";
+    let IFGOTO = "if-goto";
+    let FUNCTION = "function";
+    let CALL = "call";
+    let RETURN = "return";
+
     do Path.init();
     return;
   }
