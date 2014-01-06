@@ -1,19 +1,25 @@
 class Jhvm {
-  field int _;
   field String _outPath;
+  field int _SP;
 
   static String DOTASM;
+  static String DOTVM;
   static String SLASHES;
+  static String TRANSLATING;
 
   constructor Jhvm new()
   {
+    let _SP = 256;
     return this;
   }
 
   function void init()
   {
+    let DOTVM = ".vm";
     let DOTASM = ".asm";
     let SLASHES = "/\\";
+    let TRANSLATING = "Translating ";
+    do Path.init();
     return;
   }
 
@@ -25,8 +31,9 @@ class Jhvm {
     let l = argument.length();
     let a = argument.bytes();
 
-    if (argument.compare(-3, ".vm",0, 3) = 0) {
+    if (argument.compare(-3, DOTVM, 0, 3) = 0) {
       // replace .vm with .asm
+
       let _outPath = String.new(l+1);
       do Array.copy(_outPath.bytes(), a, l-2);
       do Array.copy(_outPath.bytes()+l-2, DOTASM.bytes()+1, 3);
@@ -43,14 +50,32 @@ class Jhvm {
     }
 
     return _outPath;
-
   }
 
-  method void translateFile(String filename)
+  method boolean translateFile(String filename)
   {
-    do Output.printString("Translating ");
+    var int fh;
+    var String line;
+
+    do Output.printString(TRANSLATING);
     do Output.printString(filename);
     do Output.println();
-    return;
+
+
+    let fh = File.open(filename, 0);
+    if (fh = -1) {
+      return false;
+    }
+
+    while(File.ready(fh) = 1) {
+      let line = File.readln(fh);
+
+        do Output.printString("  ");
+        do Output.printString(line);
+        do Output.println();
+
+      do line.dispose();
+    }
+    return true;
   }
 }

@@ -4,10 +4,12 @@ class Main {
 
   function void main() {
     var String arg;
+    var String path;
     var Array files;
     var int numFiles;
     var int i;
     var Jhvm jhvm;
+    var String f;
 
     if (Sys.argumentCount() < 1) {
       do Output.printString("Usage: jhvm <file.vm | directory>");
@@ -19,6 +21,9 @@ class Main {
     let jhvm = Jhvm.new();
     let arg = Sys.argument(0);
 
+    do Output.printString("Argument: ");
+    do Output.printString(arg);
+    do Output.println();
     do Output.printString("Output: ");
     do Output.printString(jhvm.setOutputPath(arg));
     do Output.println();
@@ -42,10 +47,12 @@ class Main {
 
       let i = 0;
       while (i < numFiles) {
-        let arg = files[i+1];
-        if (arg.compare(-3, ".vm",0, 3) = 0) {
-          do jhvm.translateFile(arg);
+        let path = Path.join(arg, files[i+1]);
+
+        if (path.compare(-3, ".vm",0, 3) = 0) {
+          do jhvm.translateFile(path);
         }
+        do path.dispose();
 
         let i = i+1;
       }
