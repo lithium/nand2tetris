@@ -1,0 +1,30 @@
+
+class Path
+{ 
+  static char SEP;
+
+  function void init() 
+  {
+    let SEP = 47;  // '/'
+    return;
+  }
+  
+  function String join(String a, String b)
+  {
+    var String ret;
+    var int al,bl;
+
+
+    let al = a.length();
+    let bl = b.length();
+    let ret = String.new(al + bl + 1);
+
+    do ret.insert(0, a);
+    do ret.setCharAt(al, SEP);
+    do ret.insert(al+1, b);
+
+    do ret.setLength(al+bl+1);
+
+    return ret;
+  }
+}

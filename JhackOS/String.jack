@@ -341,6 +341,20 @@ class String {
     }
 
 
+    method boolean insert(int index, String substr)
+    {   
+        if ((index < 0) | (index > _capacity) | 
+            (substr = null) | 
+            (index+(substr.length()) > _capacity))
+        {
+            return false;
+        }
+        do Array.copy(_str+index, substr.bytes(), substr.length());
+
+        return true;
+    }
+
+
 
     method int compare(int offset, String other, int otherOffset, int maxLength) {
         if (offset < 0) {
