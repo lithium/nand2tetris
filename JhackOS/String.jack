@@ -343,6 +343,12 @@ class String {
 
 
     method int compare(int offset, String other, int otherOffset, int maxLength) {
+        if (offset < 0) {
+            let offset = _size + offset;
+        }
+        if (otherOffset < 0) {
+            let otherOffset = other.length() + otherOffset;
+        }
         return String.strcmp(_str+offset, other.bytes()+otherOffset, maxLength);
     }
 
