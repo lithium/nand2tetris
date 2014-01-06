@@ -16,8 +16,10 @@ class Main {
       do Output.println();
       return;
     }
-
+    
+    do String.init();
     do Jhvm.init();
+
     let jhvm = Jhvm.new();
     let arg = Sys.argument(0);
 
@@ -27,6 +29,8 @@ class Main {
     do Output.printString("Output: ");
     do Output.printString(jhvm.setOutputPath(arg));
     do Output.println();
+
+    do jhvm.openOutputFile();
 
     if (arg.compare(-3, ".vm",0, 3) = 0) {
       // passed a single file
@@ -58,6 +62,8 @@ class Main {
       }
 
     }
+
+    do jhvm.closeOutputFile();
 
     return;
   }

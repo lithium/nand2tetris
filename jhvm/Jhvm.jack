@@ -1,11 +1,15 @@
 class Jhvm {
   field String _outPath;
+  field int _outfd;
+
   field int _SP;
 
   static String DOTASM;
   static String DOTVM;
   static String SLASHES;
   static String TRANSLATING;
+  static String WHITESPACE;
+  static String COMMENT;
 
   static String ADD;
   static String SUB;
@@ -35,6 +39,7 @@ class Jhvm {
 
   constructor Jhvm new()
   {
+    let _outfd = -1;
     let _SP = 256;
     return this;
   }
@@ -45,6 +50,8 @@ class Jhvm {
     let DOTASM = ".asm";
     let SLASHES = "/\\";
     let TRANSLATING = "Translating ";
+    let WHITESPACE = " \t";
+    let COMMENT = "//";
 
     let ADD = "add";
     let SUB = "sub";
@@ -101,14 +108,42 @@ class Jhvm {
       do Array.copy(_outPath.bytes()+l, DOTASM.bytes(), 4);
       do _outPath.setLength(l+4);
     }
-
     return _outPath;
+  }
+
+  method boolean openOutputFile()
+  {
+    if (_outPath = null) {
+      return false;
+    }
+    let _outfd = File.open(_outPath, 1);
+    return (~(_outfd = -1));
+  }
+  method boolean closeOutputFile() 
+  {
+    if (_outfd = -1) {
+      return false;
+    }
+    do File.close(_outfd);
+    let _outfd = -1;
+    return true;
+  }
+  method int _nextTokenEnd(String line, int start) 
+  {
+    var int idx;
+
+    let idx = line.indexOfChar(32, start);   // ' '
+    if (idx = -1) {
+      let idx = line.length();
+    }
+    return idx;
   }
 
   method boolean translateFile(String filename)
   {
     var int fh;
     var String line;
+    var int idx;
 
     do Output.printString(TRANSLATING);
     do Output.printString(filename);
@@ -123,12 +158,87 @@ class Jhvm {
     while(File.ready(fh) = 1) {
       let line = File.readln(fh);
 
+      do Jhvm.stripWhitespace(line);
+      if (line.length() > 0) {
         do Output.printString("  ");
         do Output.printString(line);
         do Output.println();
 
+        let idx = _nextTokenEnd(line, 0);
+
+        if (line.compare(0, PUSH, 0, 4) = 0) {
+          do _push(line, idx+1);
+        } else {
+        if (line.compare(0, POP, 0, 3) = 0) {
+          do _pop(line, idx+1);
+        } else {
+        if (line.compare(0, ADD, 0, 3) = 0) {
+          do _add();
+        } else {
+          do Output.printString("unhandled: ");
+          do Output.printString(line);
+          do Output.println();
+        }}}
+
+
+      }
+
       do line.dispose();
     }
     return true;
+  }
+
+  function void stripWhitespace(String line) 
+  {
+    var int idx;
+
+    // strip comments
+    let idx = line.indexOf(COMMENT);
+    if (~(idx = -1)) {
+      do line.setLength(idx);
+    }
+
+    // strip whitespace
+    do line.rstrip(WHITESPACE);
+    do line.lstrip(WHITESPACE);
+
+    return;
+  }
+
+  method void _push(String line, int argsStart) {
+    do _pushOrPop(true, line, argsStart);
+    return;
+  }
+  method void _pop(String line, int argsStart) {
+    do _pushOrPop(false, line, argsStart);
+    return;
+  }
+  method void _pushOrPop(boolean isPush, String line, int argsStart)
+  {
+    var int idx;
+    var String segment, offset;
+    var int ofs;
+
+    let idx = _nextTokenEnd(line, argsStart);
+
+    let segment = line.subString(argsStart, idx-argsStart);
+    let offset = line.subString(idx+1, line.length()-idx-1);
+
+    do Output.printString("segment: ");
+    do Output.printString(segment);
+    do Output.println();
+    do Output.printString("offset: ");
+    do Output.printInt(ofs);
+    do Output.println();
+
+    do segment.dispose();
+    do offset.dispose();
+    return;
+  }
+
+  method void _add()
+  {
+
+    return;
   }
 }
