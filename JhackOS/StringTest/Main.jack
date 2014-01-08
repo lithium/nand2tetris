@@ -36,7 +36,15 @@ class Main {
         do Output.printString(i);                // setInt: 12345
 
         do i.setInt(-32767);
-        do Output.printString(",   -32767 ==");
+        do Output.printString(",  -32767 == ");
+        do Output.printString(i);                // setInt: -32767
+
+        do i.setInt(0);
+        do Output.printString(",  0 == ");
+        do Output.printString(i);                // setInt: -32767
+
+        do i.setInt(1);
+        do Output.printString(",  1 == ");
         do Output.printString(i);                // setInt: -32767
         do Output.println();
         
