@@ -39,6 +39,13 @@ class Jhvm {
   static String CALL;
   static String RETURN;
 
+  static String PUSH_POSTAMBLE;
+  static String POP_PREAMBLE;
+  static String POP_POSTAMBLE;
+  static String POP_TWOARGS;
+  static String STACK_INC;
+  static String ADD_MD;
+
   constructor Jhvm new()
   {
     let _outfd = -1;
@@ -80,6 +87,37 @@ class Jhvm {
     let FUNCTION = "function";
     let CALL = "call";
     let RETURN = "return";
+
+
+    // translated push command
+    //    @<value>
+    //    D=A
+    //    @SP
+    //    A=M
+    //    M=D
+    //    @SP
+    //    M=M+1
+    let PUSH_POSTAMBLE = "\n D=A\n @SP\n A=M\n M=D\n @SP\n M=M+1\n";
+
+
+    // translated pop command
+    //  @SP           
+    //  M=M-1
+    //  A=M
+    //  D=M
+    //  @<address>    
+    //  M=D
+    let POP_PREAMBLE = "\n @SP\n M=M-1\n A=M\n D=M\n ";
+    let POP_POSTAMBLE = "\n M=D\n";
+
+
+    // stack operations
+    let POP_TWOARGS = "\n @SP\n M=M-1\n A=M\n D=M\n @SP\n M=M-1\n A=M\n";
+    let STACK_INC = "\n @SP\n M=M+1\n";
+
+    // arithmetic operations
+    let ADD_MD = "\n M=M+D\n";
+
 
     do Path.init();
     return;
@@ -260,7 +298,7 @@ class Jhvm {
     return ret;
   }
 
-  method int _resolveSegmentAddress(String segment, int offset)
+  method int _resolveSegment(String segment, int offset)
   {
     if (segment.compare(0, CONSTANT,0, 8) = 0) {
       return offset;
@@ -272,6 +310,7 @@ class Jhvm {
   method void _push(String segment, int offset) 
   {
     var int value;
+    var String loadValue;
 
     do Output.printString("Push segment:");
     do Output.printString(segment);
@@ -280,6 +319,9 @@ class Jhvm {
     do Output.println();
 
     let value = _resolveSegment(segment, offset);
+    let loadValue = String.new(6);
+    do loadValue.setCharAt(0, 64);     // '@'
+    do loadValue.setIntAt(1, value);
 
     //    @<value>
     //    D=A
@@ -288,13 +330,17 @@ class Jhvm {
     //    M=D
     //    @SP
     //    M=M+1
+    do File.write(_outfd, loadValue);
+    do File.write(_outfd, PUSH_POSTAMBLE);
 
+
+    do loadValue.dispose();
     return;
   }
 
   method void _pop(String segment, int offset) {
     var int address;
-    let address = _resolveSegment(segment, offset);
+    var String loadValue;
 
     do Output.printString("Pop segment:");
     do Output.printString(segment);
@@ -302,12 +348,21 @@ class Jhvm {
     do Output.printInt(offset);
     do Output.println();
 
+    let address = _resolveSegment(segment, offset);
+    let loadValue = String.new(6);
+    do loadValue.setCharAt(0, 64);     // '@'
+    do loadValue.setIntAt(1, address);
+
     //  @SP           
     //  M=M-1
     //  A=M
     //  D=M
     //  @<address>    
     //  M=D
+    do File.write(_outfd, POP_PREAMBLE);
+    do File.write(_outfd, loadValue);
+    do File.write(_outfd, POP_POSTAMBLE);
+
 
     return;
   }
@@ -317,15 +372,16 @@ class Jhvm {
     do Output.printString("Add");
     do Output.println();
 
+    do File.write(_outfd, POP_TWOARGS);
+    do File.write(_outfd, ADD_MD);
+    do File.write(_outfd, STACK_INC);
 
-    // D = *--SP
-    //    @SP    
+    //    @SP           // D = *--SP
     //    M=M-1
     //    A=M
     //    D=M
 
-    // *SP++ = *--SP + D
-    //    @SP    
+    //    @SP           // *SP++ = *--SP + D
     //    M=M-1
     //    A=M
     //    M=M+D
