@@ -42,9 +42,15 @@ class Jhvm {
   static String PUSH_POSTAMBLE;
   static String POP_PREAMBLE;
   static String POP_POSTAMBLE;
-  static String POP_TWOARGS;
+  static String POP_FIRSTARG;
+  static String POP_SECONDARG;
   static String STACK_INC;
   static String ADD_MD;
+  static String SUB_MD;
+  static String AND_MD;
+  static String OR_MD;
+  static String NEG_PUSHRETURN;
+  static String NOT_PUSHRETURN;
 
   constructor Jhvm new()
   {
@@ -112,11 +118,24 @@ class Jhvm {
 
 
     // stack operations
-    let POP_TWOARGS = "\n @SP\n M=M-1\n A=M\n D=M\n @SP\n M=M-1\n A=M\n";
+
+    // D = *--SP
+    let POP_FIRSTARG = "\n @SP\n M=M-1\n A=M\n D=M\n";
+    let POP_SECONDARG = "\n @SP\n M=M-1\n A=M\n";
+   
+    //let POP_TWOARGS = "\n @SP\n M=M-1\n A=M\n D=M\n @SP\n M=M-1\n A=M\n";
     let STACK_INC = "\n @SP\n M=M+1\n";
+
+    let NEG_PUSHRETURN = "\n @SP\n A=M\n M=-D\n @SP\nM=M+1\n";
+    let NOT_PUSHRETURN = "\n @SP\n A=M\n M=!D\n @SP\nM=M+1\n";
 
     // arithmetic operations
     let ADD_MD = "\n M=M+D\n";
+    let SUB_MD = "\n M=M-D\n";
+    let AND_MD = "\n M=M&D\n";
+    let OR_MD  = "\n M=M|D\n";
+
+
 
 
     do Path.init();
@@ -241,10 +260,25 @@ class Jhvm {
         if (line.compare(0, ADD, 0, 3) = 0) {
           do _add();
         } else {
+        if (line.compare(0, SUB, 0, 3) = 0) {
+          do _sub();
+        } else {
+        if (line.compare(0, NEG, 0, 3) = 0) {
+          do _neg();
+        } else {
+        if (line.compare(0, AND, 0, 3) = 0) {
+          do _and();
+        } else {
+        if (line.compare(0, OR, 0, 2) = 0) {
+          do _or();
+        } else {
+        if (line.compare(0, NOT, 0, 3) = 0) {
+          do _not();
+        } else {
           do Output.printString("unhandled: ");
           do Output.printString(line);
           do Output.println();
-        }}}}}}}}}
+        }}}}}}}}}}}}}}
 
         if (~(arg1 = null)) {
           do arg1.dispose();
@@ -330,6 +364,7 @@ class Jhvm {
     //    M=D
     //    @SP
     //    M=M+1
+    do File.write(_outfd, "\n// push\n");
     do File.write(_outfd, loadValue);
     do File.write(_outfd, PUSH_POSTAMBLE);
 
@@ -372,7 +407,9 @@ class Jhvm {
     do Output.printString("Add");
     do Output.println();
 
-    do File.write(_outfd, POP_TWOARGS);
+    do File.write(_outfd, "\n// add\n");
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
     do File.write(_outfd, ADD_MD);
     do File.write(_outfd, STACK_INC);
 
@@ -387,9 +424,76 @@ class Jhvm {
     //    M=M+D
     //    @SP
     //    M=M+1
+    return;
+  }
 
 
+  method void _neg()
+  {
+    do Output.printString("Neg");
+    do Output.println();
 
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.Write(_outfd, NEG_PUSHRETURN);
+    //    @SP           // D = *--SP
+    //    M=M-1
+    //    A=M
+    //    D=M
+
+    //    @SP              // *SP++ = -D
+    //    A=M
+    //    M=-D
+    //    @SP
+    //    M=M+1
+
+    return;
+  }
+
+
+  method void _sub()
+  {
+    do Output.printString("Sub");
+    do Output.println();
+
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
+    do File.write(_outfd, SUB_MD);
+    do File.write(_outfd, STACK_INC);
+    return;
+ 
+  }
+
+  method void _and()
+  {
+    do Output.printString("And");
+    do Output.println();
+
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
+    do File.write(_outfd, AND_MD);
+    do File.write(_outfd, STACK_INC);
+    return;
+  }
+
+  method void _or()
+  {
+    do Output.printString("Or");
+    do Output.println();
+
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
+    do File.write(_outfd, OR_MD);
+    do File.write(_outfd, STACK_INC);
+    return;
+  }
+
+  method void _not()
+  {
+    do Output.printString("Not");
+    do Output.println();
+
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.Write(_outfd, NOT_PUSHRETURN);
     return;
   }
 
