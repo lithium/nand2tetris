@@ -1,0 +1,9 @@
+
+
+class Integer {
+ 
+  /** Returns A % N, such that the remainder of A / N is returned **/
+  function int modulo(int a, int n) {
+    return a - (n * (a / n));
+  }
+}
