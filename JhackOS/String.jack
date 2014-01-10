@@ -319,11 +319,9 @@ class String {
     method int rightIndexOfChar(char c, int offset)
     {
         var int i;
-        var int l;
 
-        let l = length();
-        let i = l-1;
-        while (i > offset | i = offset) {
+        let i = _size-1;
+        while ((i > offset) | (i = offset)) {
           if (c = charAt(i)) {
             return i;
           }
