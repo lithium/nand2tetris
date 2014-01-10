@@ -56,6 +56,7 @@ class Jhvm {
   static String OR_MD;
   static String NEG_PUSHRETURN;
   static String NOT_PUSHRETURN;
+  static String RETURN_PREAMBLE;
 
   static String COND_PREAMBLE;
   static String COND_POSTAMBLE;
@@ -198,6 +199,8 @@ class Jhvm {
     let MEMSET_PRE = "\n @SP\nA=M\n";
     let INC_A = " M=0\n A=A+1\n";
     let MEMSET_POST = "\n D=A\n @SP\n M=D\n";
+
+    let RETURN_PREAMBLE = "\n @SP\n AM=M-1\n D=M\n @ARG\n A=M\n M=D\n @ARG\n D=M+1\n @SP\n M=D\n @LCL\n D=M\n @R15\n M=D\n @R15\n AM=M-1\n D=M\n @THAT\n M=D\n @R15\n AM=M-1\n D=M\n @THIS\n M=D\n @R15\n AM=M-1\n D=M\n @ARG\n M=D\n @R15\n AM=M-1\n D=M\n @LCL\n M=D\n @R15\n A=M\n 0;JMP\n";
 
 
     do Path.init();
@@ -958,6 +961,9 @@ class Jhvm {
   {
     var String s;
     let s = _loadSymbolIntoA(symbol);
+
+    do File.write(_outfd, "\n// goto\n");
+
     do File.write(_outfd, s);
     do File.write(_outfd, ZERO_JUMP);
 
@@ -969,6 +975,8 @@ class Jhvm {
   {
     var String s;
     let s = _loadSymbolIntoA(symbol);
+
+    do File.write(_outfd, "\n// if-goto\n");
 
     do File.write(_outfd, POP_TO_D);
     do File.write(_outfd, s);
@@ -1016,11 +1024,74 @@ class Jhvm {
 
   method void _call(String functionName, int nArgs)
   {
+    do File.write(_outfd, "\n// call\n");
+
     return;
   }
 
   method void _return()
   {
+    do File.write(_outfd, "\n// return\n");
+
+    do File.write(_outfd, RETURN_PREAMBLE);
+
+
+    /**
+
+      // pop return value and store at arg+0
+      @SP
+      AM=M-1
+      D=M
+      @ARG
+      A=M
+      M=D
+
+      // reposition SP to point to arg+1
+      @ARG
+      D=M+1
+      @SP
+      M=D
+
+      // R15 = LCL
+      @LCL
+      D=M
+      @R15
+      M=D
+
+      // pop from R15: restore THAT
+      @R15
+      AM=M-1
+      D=M
+      @THAT
+      M=D
+
+      // pop from R15: restore THIS
+      @R15
+      AM=M-1
+      D=M
+      @THIS
+      M=D
+
+      // pop from R15: restore ARG
+      @R15
+      AM=M-1
+      D=M
+      @ARG
+      M=D
+
+      // pop from R15: restore LCL
+      @R15
+      AM=M-1
+      D=M
+      @LCL
+      M=D
+
+      // R15 should now point to return address
+      @R15
+      A=M
+      0;JMP
+
+      */
     return;
   }
 
