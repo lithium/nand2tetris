@@ -88,6 +88,8 @@ class Jhvm {
   static String MEMSET_PRE;
   static String INC_A;
   static String MEMSET_POST;
+  static String CALL_PREAMBLE;
+  static String CALL_POSTAMBLE;
 
 
   constructor Jhvm new()
@@ -201,6 +203,9 @@ class Jhvm {
     let MEMSET_POST = "\n D=A\n @SP\n M=D\n";
 
     let RETURN_PREAMBLE = "\n @SP\n AM=M-1\n D=M\n @ARG\n A=M\n M=D\n @ARG\n D=M+1\n @SP\n M=D\n @LCL\n D=M\n @R15\n M=D\n @R15\n AM=M-1\n D=M\n @THAT\n M=D\n @R15\n AM=M-1\n D=M\n @THIS\n M=D\n @R15\n AM=M-1\n D=M\n @ARG\n M=D\n @R15\n AM=M-1\n D=M\n @LCL\n M=D\n @R15\n A=M\n 0;JMP\n";
+
+    let CALL_PREAMBLE = "\n D=A\n @SP\n A=M\n M=D\n @LCL\n D=M\n @SP\n AM=M+1\n M=D\n @ARG\n D=M\n @SP\n AM=M+1\n M=D\n @THIS\n D=M\n @SP\n AM=M+1\n M=D\n @THAT\n D=M\n @SP\n AM=M+1\n M=D\n @SP\n D=M\n";
+    let CALL_POSTAMBLE = "\n D=D-A\n @5\n D=D-A\n @ARG\n M=D\n @SP\n D=M\n @LCL\n M=D\n";
 
 
     do Path.init();
@@ -1024,8 +1029,90 @@ class Jhvm {
 
   method void _call(String functionName, int nArgs)
   {
+    var String s;
+    var String strRetAddr, strFun;
+
+    let s = "return_address";
+
     do File.write(_outfd, "\n// call\n");
 
+    let strRetAddr = _loadSymbolIntoA(s);
+    let strFun = _loadSymbolIntoA(functionName);
+    do bufferLabelInteger(nArgs);
+
+
+
+
+    do File.write(_outfd, strRetAddr);
+    do File.write(_outfd, CALL_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, CALL_POSTAMBLE);
+    do File.write(_outfd, strFun);
+    do File.write(_outfd, ZERO_JUMP);
+    do _label(functionName);
+
+    do strFun.dispose();
+    do strRetAddr.dispose();
+    do s.dispose();
+
+    /**
+   
+      // push return address 
+      @return_address 
+      D=A
+      @SP
+      A=M
+      M=D
+
+      // push LCL
+      @LCL
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // push ARG
+      @ARG
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // push THIS
+      @THIS
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // push THAT
+      @THAT
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // ARG = SP - numArgs - 5
+      @SP
+      D=M
+      @<numArgs>
+      D=D-A
+      @5
+      D=D-A
+      @ARG
+      M=D
+
+      // LCL = SP
+      @SP
+      D=M
+      @LCL
+      M=D
+
+      @<functionName>
+      0;JMP
+    (return_address)
+
+      */
     return;
   }
 
