@@ -84,6 +84,11 @@ class Jhvm {
   static String POP_TO_D;
   static String M_EQ_D;
 
+  static String MEMSET_PRE;
+  static String INC_A;
+  static String MEMSET_POST;
+
+
   constructor Jhvm new()
   {
     let _outfd = -1;
@@ -188,6 +193,12 @@ class Jhvm {
     let COND_D_TRUE = "\n D=-1\n";
     let ZERO_JUMP = "\n 0;JMP\n";
     let D_JNE = "\n D;JNE\n";
+
+
+    let MEMSET_PRE = "\n @SP\nA=M\n";
+    let INC_A = " M=0\n A=A+1\n";
+    let MEMSET_POST = "\n D=A\n @SP\n M=D\n";
+
 
     do Path.init();
     return;
@@ -908,21 +919,6 @@ class Jhvm {
     return;
   }
 
-  method void _function(String functionName, int nLocals)
-  {
-    return;
-  }
-
-  method void _call(String functionName, int nArgs)
-  {
-    return;
-  }
-
-  method void _return()
-  {
-    return;
-  }
-
   method void _label(String symbol)
   {
     var String s;
@@ -957,6 +953,7 @@ class Jhvm {
     return s;
   }
 
+
   method void _goto(String symbol)
   {
     var String s;
@@ -987,6 +984,43 @@ class Jhvm {
       @<label>
       D;JNE
     */
+    return;
+  }
+
+  method void _function(String functionName, int nLocals)
+  {
+    do _label(functionName);
+    if (nLocals > 0) {
+      do File.write(_outfd, MEMSET_PRE);
+      while (nLocals > 0) {
+        do File.write(_outfd, INC_A);
+
+        let nLocals = nLocals - 1;
+      }
+      do File.write(_outfd, MEMSET_POST);
+    }
+
+
+    /** memset(SP, 0, nLocals); SP += nLocals;
+
+        @SP    // *SP++ = 0
+        M=0
+        A=A+1
+        ...
+        D=A
+        @SP
+        M=D
+     */
+    return;
+  }
+
+  method void _call(String functionName, int nArgs)
+  {
+    return;
+  }
+
+  method void _return()
+  {
     return;
   }
 
