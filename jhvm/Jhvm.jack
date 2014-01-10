@@ -6,6 +6,8 @@ class Jhvm {
 
   field int _SP;
 
+  field int _eqCounter;
+
   static String DOTASM;
   static String DOTVM;
   static String SLASHES;
@@ -38,6 +40,9 @@ class Jhvm {
   static String FUNCTION;
   static String CALL;
   static String RETURN;
+  static String EQ;
+  static String LT;
+  static String GT;
 
   static String PUSH_POSTAMBLE;
   static String POP_PREAMBLE;
@@ -51,6 +56,12 @@ class Jhvm {
   static String OR_MD;
   static String NEG_PUSHRETURN;
   static String NOT_PUSHRETURN;
+
+  static String COND_PREAMBLE;
+  static String COND_POSTAMBLE;
+  static String COND_EQ;
+  static String COND_EQ_PREFIX;
+  static String sLabelBuffer;
 
   constructor Jhvm new()
   {
@@ -79,6 +90,9 @@ class Jhvm {
     let NOT = "not";
     let PUSH = "push";
     let POP = "pop";
+    let EQ = "eq";
+    let LT = "lt";
+    let GT = "gt";
     let ARGUMENT = "argument";
     let LOCAL = "local";
     let STATIC = "static";
@@ -119,11 +133,9 @@ class Jhvm {
 
     // stack operations
 
-    // D = *--SP
     let POP_FIRSTARG = "\n @SP\n M=M-1\n A=M\n D=M\n";
     let POP_SECONDARG = "\n @SP\n M=M-1\n A=M\n";
    
-    //let POP_TWOARGS = "\n @SP\n M=M-1\n A=M\n D=M\n @SP\n M=M-1\n A=M\n";
     let STACK_INC = "\n @SP\n M=M+1\n";
 
     let NEG_PUSHRETURN = "\n @SP\n A=M\n M=-D\n @SP\nM=M+1\n";
@@ -136,6 +148,12 @@ class Jhvm {
     let OR_MD  = "\n M=M|D\n";
 
 
+    let sLabelBuffer = String.new(11); // (ifxxNNNNN)
+    let COND_PREAMBLE = "\n @SP\n M=M-1\n A=M\n D=M\n @SP\n M=M-1\n A=M\n D=D-M\n";
+    let COND_POSTAMBLE = "\n @SP\n A=M\n M=!D\n @SP\n M=M+1\n";
+
+    let COND_EQ_PREFIX = "@ifeq";
+    let COND_EQ = "\n D;JEQ\n D=-1\n";
 
 
     do Path.init();
@@ -275,10 +293,19 @@ class Jhvm {
         if (line.compare(0, NOT, 0, 3) = 0) {
           do _not();
         } else {
+        if (line.compare(0, EQ, 0, 2) = 0) {
+          do _eq();
+        } else {
+        if (line.compare(0, LT, 0, 2) = 0) {
+          do _lt();
+        } else {
+        if (line.compare(0, GT, 0, 2) = 0) {
+          do _gt();
+        } else {
           do Output.printString("unhandled: ");
           do Output.printString(line);
           do Output.println();
-        }}}}}}}}}}}}}}
+        }}}}}}}}}}}}}}}}}
 
         if (~(arg1 = null)) {
           do arg1.dispose();
@@ -433,8 +460,9 @@ class Jhvm {
     do Output.printString("Neg");
     do Output.println();
 
+    do File.write(_outfd, "\n// neg\n");
     do File.write(_outfd, POP_FIRSTARG);
-    do File.Write(_outfd, NEG_PUSHRETURN);
+    do File.write(_outfd, NEG_PUSHRETURN);
     //    @SP           // D = *--SP
     //    M=M-1
     //    A=M
@@ -455,6 +483,7 @@ class Jhvm {
     do Output.printString("Sub");
     do Output.println();
 
+    do File.write(_outfd, "\n// sub\n");
     do File.write(_outfd, POP_FIRSTARG);
     do File.write(_outfd, POP_SECONDARG);
     do File.write(_outfd, SUB_MD);
@@ -468,6 +497,7 @@ class Jhvm {
     do Output.printString("And");
     do Output.println();
 
+    do File.write(_outfd, "\n// and\n");
     do File.write(_outfd, POP_FIRSTARG);
     do File.write(_outfd, POP_SECONDARG);
     do File.write(_outfd, AND_MD);
@@ -480,6 +510,7 @@ class Jhvm {
     do Output.printString("Or");
     do Output.println();
 
+    do File.write(_outfd, "\n// or\n");
     do File.write(_outfd, POP_FIRSTARG);
     do File.write(_outfd, POP_SECONDARG);
     do File.write(_outfd, OR_MD);
@@ -492,8 +523,91 @@ class Jhvm {
     do Output.printString("Not");
     do Output.println();
 
+    do File.write(_outfd, "\n// not\n");
     do File.write(_outfd, POP_FIRSTARG);
-    do File.Write(_outfd, NOT_PUSHRETURN);
+    do File.write(_outfd, NOT_PUSHRETURN);
+    return;
+  }
+
+  method void _eq()
+  {
+    var int l;
+
+    do Output.printString("= ");
+    do Output.println();
+
+    do File.write(_outfd, "\n// eq\n");
+
+    // create instruction that loads label into accumulator
+    let l = COND_EQ_PREFIX.length();
+    do sLabelBuffer.insert(0, COND_EQ_PREFIX);    
+    do sLabelBuffer.setLength(l);
+    do sLabelBuffer.setIntAt(l, _eqCounter);
+    let _eqCounter = _eqCounter+1;
+
+
+    do File.write(_outfd, COND_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_EQ);
+
+    // update label buffer
+    do sLabelBuffer.setCharAt(0, 40);   // '('
+    do sLabelBuffer.appendChar(41);      // ')'
+
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_POSTAMBLE);
+/*
+        @SP           // D = *--SP
+        M=M-1
+        A=M
+        D=M
+
+        @SP           // D -= *--SP
+        M=M-1
+        A=M
+        D=D-M
+
+        @ifeq         // if d != false: d = true
+        D;JEQ         
+        D=-1
+      (ifeq)
+
+        @SP           // *SP++ = D
+        A=M 
+        M=!D
+        @SP           
+        M=M+1   
+*/
+
+
+    return;
+  }
+
+  method void _gt()
+  {
+    do Output.printString("> ");
+    do Output.println();
+    return;
+  }
+
+  method void _lt()
+  {
+    do Output.printString("< ");
+    do Output.println();
+
+
+    /* preamble...
+        @iflt         // d = (d < 0 ? true : false)
+        D;JLT       
+        D=0
+        @filt
+        0;JMP
+      (iflt)
+        D=-1
+      (filt)
+
+      postamble...*/
+
     return;
   }
 

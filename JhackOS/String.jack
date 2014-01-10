@@ -184,7 +184,7 @@ class String {
             }
         }
 
-        if (_size < index+numDigits-1) {
+        if (_size < index+numDigits) {
             let _size = index+numDigits;
         }
 
