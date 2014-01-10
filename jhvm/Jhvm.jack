@@ -83,6 +83,9 @@ class Jhvm {
   static String AT_THAT;
   static String AT_TEMP;
 
+  static String POP_TO_D;
+  static String M_EQ_D;
+
   constructor Jhvm new()
   {
     let _outfd = -1;
@@ -140,6 +143,8 @@ class Jhvm {
     let PUSH_POSTAMBLE = "\n @SP\n A=M\n M=D\n @SP\n M=M+1\n";
     let PUSH_SEGMENT = "\n D=D+M\n A=D\n D=M\n";
 
+    let POP_TO_D = "\n @SP\n AM=M-1\n D=M\n";
+    let M_EQ_D = "\n M=D\n";
 
     // pop from memory segment with offset
     let D_EQ_A = "\n D=A\n";
@@ -215,6 +220,7 @@ class Jhvm {
       do Array.copy(_outPath.bytes()+l, DOTASM.bytes(), 4);
       do _outPath.setLength(l+4);
     }
+
     return _outPath;
   }
 
@@ -400,6 +406,7 @@ class Jhvm {
 
   method void _push(String segment, int offset) 
   {
+    var String staticLabel;
 
     do Output.printString("Push segment:");
     do Output.printString(segment);
@@ -509,13 +516,29 @@ class Jhvm {
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_M);
       do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, STATIC,0, 6) = 0) {
+      let staticLabel = String.new(5+5);
+      do staticLabel.insert(0, "@Foo.");
+      do staticLabel.setLength(staticLabel.setIntAt(5, offset)+5);
 
-    }}}}}}}
+      do File.write(_outfd, "\n// push static\n");
+
+      do File.write(_outfd, staticLabel);
+      do File.write(_outfd, D_EQ_M);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+      do staticLabel.dispose();
+
+    } else {
+
+    }}}}}}}}
 
     return;
   }
 
   method void _pop(String segment, int offset) {
+    var String staticLabel;
 
     do Output.printString("Pop segment:");
     do Output.printString(segment);
@@ -572,11 +595,33 @@ class Jhvm {
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_TEMP);
       do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, STATIC,0, 6) = 0) {
+      let staticLabel = String.new(5+5);
+      do staticLabel.insert(0, "@Foo.");
+      do staticLabel.setLength(staticLabel.setIntAt(5, offset)+5);
 
+      /** Pop static
+        // D = *--SP
+        @SP
+        AM=M-1
+        D=M
+
+        @<file>.<offset>
+        M=D
+      */
+
+
+      do File.write(_outfd, "\n// pop static \n");
+      do File.write(_outfd, POP_TO_D);
+      do File.write(_outfd, staticLabel);
+      do File.write(_outfd, M_EQ_D);
+
+      do staticLabel.dispose();
 
     } else {
 
-    }}}}}}
+    }}}}}}}
 
      
       /*
