@@ -76,6 +76,7 @@ class Jhvm {
   static String COND_D_TRUE;
 
   static String D_EQ_A;
+  static String D_EQ_M;
   static String AT_LOCAL;
   static String AT_ARG;
   static String AT_THIS;
@@ -138,12 +139,11 @@ class Jhvm {
     //    M=M+1
     let PUSH_POSTAMBLE = "\n @SP\n A=M\n M=D\n @SP\n M=M+1\n";
     let PUSH_SEGMENT = "\n D=D+M\n A=D\n D=M\n";
-    let THIS_SEGMENT = " @THIS\n";
-    let THAT_SEGMENT = " @THAT\n";
 
 
     // pop from memory segment with offset
     let D_EQ_A = "\n D=A\n";
+    let D_EQ_M = "\n D=M\n";
     let POP_POSTAMBLE = "\n D=D+M\n @R15\n M=D\n @SP\n M=M-1\n A=M\n D=M\n @R15\n A=M\n M=D\n";
     let AT_LOCAL = "\n @LCL\n";
     let AT_ARG = "\n @ARG\n";
@@ -434,9 +434,8 @@ class Jhvm {
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
 
-      do File.write(_outfd, THIS_SEGMENT);
+      do File.write(_outfd, AT_THIS);
       do File.write(_outfd, PUSH_SEGMENT);
-
       do File.write(_outfd, PUSH_POSTAMBLE);
 
 
@@ -456,6 +455,30 @@ class Jhvm {
         M=M+1
     */
 
+    } else {
+    if (segment.compare(0, LOCAL,0, 5) = 0) {
+
+      do File.write(_outfd, "\n// push local\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, AT_LOCAL);
+      do File.write(_outfd, PUSH_SEGMENT);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, ARGUMENT,0, 8) = 0) {
+
+      do File.write(_outfd, "\n// push argument\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, AT_ARG);
+      do File.write(_outfd, PUSH_SEGMENT);
+      do File.write(_outfd, PUSH_POSTAMBLE);
 
     } else {
     if (segment.compare(0, THAT,0, 4) = 0) {
@@ -466,12 +489,28 @@ class Jhvm {
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
 
-      do File.write(_outfd, THAT_SEGMENT);
+      do File.write(_outfd, AT_THAT);
       do File.write(_outfd, PUSH_SEGMENT);
 
       do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, TEMP,0, 4) = 0) {
+      do File.write(_outfd, "\n// push temp\n");
 
-    }}}
+      do bufferLabelInteger(offset + 5);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_M);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, POINTER,0, 7) = 0) {
+      do File.write(_outfd, "\n// push pointer\n");
+      
+      do bufferLabelInteger(offset + 3);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_M);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+    }}}}}}}
 
     return;
   }
@@ -486,37 +525,45 @@ class Jhvm {
 
     do bufferLabelInteger(offset);
 
-    do File.write(_outfd, "\n// pop\n");
 
     if (segment.compare(0, LOCAL,0, 5) = 0) {
+      do File.write(_outfd, "\n// pop local\n");
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_LOCAL);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, ARGUMENT,0, 8) = 0) {
+      do File.write(_outfd, "\n// pop argument\n");
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_ARG);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, THIS,0, 4) = 0) {
+      do File.write(_outfd, "\n// pop this\n");
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_THIS);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, THAT,0, 4) = 0) {
+      do File.write(_outfd, "\n// pop that\n");
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_THAT);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, TEMP,0, 4) = 0) {
+      do bufferLabelInteger(offset+5);
+
+      do File.write(_outfd, "\n// pop temp\n");
       do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_TEMP);
       do File.write(_outfd, POP_POSTAMBLE);
+
+
     } else {
 
     }}}}}
