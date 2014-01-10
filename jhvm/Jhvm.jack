@@ -6,7 +6,7 @@ class Jhvm {
 
   field int _SP;
 
-  field int _eqCounter;
+  field int _eqCounter, _gtCounter, _ltCounter;
 
   static String DOTASM;
   static String DOTVM;
@@ -61,7 +61,16 @@ class Jhvm {
   static String COND_POSTAMBLE;
   static String COND_EQ;
   static String COND_EQ_PREFIX;
-  static String sLabelBuffer;
+  static String sLabelBuffer, sLabelBuffer2;
+
+  static String COND_LT_BEGIN;
+  static String COND_LT_END;
+  static String COND_LT;
+  static String COND_GT_BEGIN;
+  static String COND_GT_END;
+  static String COND_GT;
+  static String COND_JMP;
+  static String COND_D_TRUE;
 
   constructor Jhvm new()
   {
@@ -149,12 +158,21 @@ class Jhvm {
 
 
     let sLabelBuffer = String.new(11); // (ifxxNNNNN)
+    let sLabelBuffer2 = String.new(11); // (ifxxNNNNN)
     let COND_PREAMBLE = "\n @SP\n M=M-1\n A=M\n D=M\n @SP\n M=M-1\n A=M\n D=D-M\n";
     let COND_POSTAMBLE = "\n @SP\n A=M\n M=!D\n @SP\n M=M+1\n";
 
     let COND_EQ_PREFIX = "@ifeq";
     let COND_EQ = "\n D;JEQ\n D=-1\n";
 
+    let COND_LT_BEGIN = "@iflt";
+    let COND_LT_END = "@filt";
+    let COND_LT = "\n D;JLE\n D=0\n";
+    let COND_GT_BEGIN = "@ifgt";
+    let COND_GT_END = "@figt";
+    let COND_GT = "\n D;JGE\n D=0\n";
+    let COND_JMP = "\n 0;JMP\n";
+    let COND_D_TRUE = "\n D=-1\n";
 
     do Path.init();
     return;
@@ -529,30 +547,41 @@ class Jhvm {
     return;
   }
 
-  method void _eq()
+
+  // create instruction that loads label into accumulator
+  method void bufferLabelLoad(String buffer, String prefix, int counter)
   {
     var int l;
 
+    let l = prefix.length();
+    do buffer.insert(0, prefix);    
+    do buffer.setLength(l);
+    do buffer.setIntAt(l, counter);
+    return;
+  }
+  // update label buffer to create label define instruction 
+  method void bufferLabelDefine(String buffer)
+  {
+    do buffer.setCharAt(0, 40);   // '('
+    do buffer.appendChar(41);      // ')'
+    return;
+  }
+
+  method void _eq()
+  {
     do Output.printString("= ");
     do Output.println();
 
     do File.write(_outfd, "\n// eq\n");
 
-    // create instruction that loads label into accumulator
-    let l = COND_EQ_PREFIX.length();
-    do sLabelBuffer.insert(0, COND_EQ_PREFIX);    
-    do sLabelBuffer.setLength(l);
-    do sLabelBuffer.setIntAt(l, _eqCounter);
+    do bufferLabelLoad(sLabelBuffer, COND_EQ_PREFIX, _eqCounter);
     let _eqCounter = _eqCounter+1;
-
 
     do File.write(_outfd, COND_PREAMBLE);
     do File.write(_outfd, sLabelBuffer);
     do File.write(_outfd, COND_EQ);
 
-    // update label buffer
-    do sLabelBuffer.setCharAt(0, 40);   // '('
-    do sLabelBuffer.appendChar(41);      // ')'
+    do bufferLabelDefine(sLabelBuffer);
 
     do File.write(_outfd, sLabelBuffer);
     do File.write(_outfd, COND_POSTAMBLE);
@@ -585,8 +614,31 @@ class Jhvm {
 
   method void _gt()
   {
-    do Output.printString("> ");
+    do Output.printString("Gt ");
     do Output.println();
+
+    do File.write(_outfd, "\n// gt\n");
+
+    do bufferLabelLoad(sLabelBuffer, COND_GT_BEGIN, _gtCounter);
+    do bufferLabelLoad(sLabelBuffer2, COND_GT_END, _gtCounter);
+    let _gtCounter = _gtCounter+1;
+
+    do File.write(_outfd, COND_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_GT);
+
+    do File.write(_outfd, sLabelBuffer2);
+    do File.write(_outfd, COND_JMP);
+
+    do bufferLabelDefine(sLabelBuffer);
+    do bufferLabelDefine(sLabelBuffer2);
+
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_D_TRUE);
+    do File.write(_outfd, sLabelBuffer2);
+
+    do File.write(_outfd, COND_POSTAMBLE);
+
     return;
   }
 
@@ -595,6 +647,27 @@ class Jhvm {
     do Output.printString("< ");
     do Output.println();
 
+    do File.write(_outfd, "\n// lt\n");
+
+    do bufferLabelLoad(sLabelBuffer, COND_LT_BEGIN, _ltCounter);
+    do bufferLabelLoad(sLabelBuffer2, COND_LT_END, _ltCounter);
+    let _ltCounter = _ltCounter+1;
+
+    do File.write(_outfd, COND_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_LT);
+
+    do File.write(_outfd, sLabelBuffer2);
+    do File.write(_outfd, COND_JMP);
+
+    do bufferLabelDefine(sLabelBuffer);
+    do bufferLabelDefine(sLabelBuffer2);
+
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_D_TRUE);
+    do File.write(_outfd, sLabelBuffer2);
+
+    do File.write(_outfd, COND_POSTAMBLE);
 
     /* preamble...
         @iflt         // d = (d < 0 ? true : false)
