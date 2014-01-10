@@ -69,7 +69,8 @@ class Jhvm {
   static String COND_GT_BEGIN;
   static String COND_GT_END;
   static String COND_GT;
-  static String COND_JMP;
+  static String ZERO_JUMP;
+  static String D_JNE;
   static String COND_D_TRUE;
 
   static String D_EQ_A;
@@ -184,8 +185,9 @@ class Jhvm {
     let COND_GT_BEGIN = "@ifgt";
     let COND_GT_END = "@figt";
     let COND_GT = "\n D;JGE\n D=0\n";
-    let COND_JMP = "\n 0;JMP\n";
     let COND_D_TRUE = "\n D=-1\n";
+    let ZERO_JUMP = "\n 0;JMP\n";
+    let D_JNE = "\n D;JNE\n";
 
     do Path.init();
     return;
@@ -850,7 +852,7 @@ class Jhvm {
     do File.write(_outfd, COND_GT);
 
     do File.write(_outfd, sLabelBuffer2);
-    do File.write(_outfd, COND_JMP);
+    do File.write(_outfd, ZERO_JUMP);
 
     do bufferLabelDefine(sLabelBuffer);
     do bufferLabelDefine(sLabelBuffer2);
@@ -880,7 +882,7 @@ class Jhvm {
     do File.write(_outfd, COND_LT);
 
     do File.write(_outfd, sLabelBuffer2);
-    do File.write(_outfd, COND_JMP);
+    do File.write(_outfd, ZERO_JUMP);
 
     do bufferLabelDefine(sLabelBuffer);
     do bufferLabelDefine(sLabelBuffer2);
@@ -923,16 +925,68 @@ class Jhvm {
 
   method void _label(String symbol)
   {
+    var String s;
+    var int l;
+    let l = symbol.length();
+    let s = String.new(l+3);
+
+    //(<symbol>)
+    do s.setCharAt(0, 40);   // '('
+    do s.insert(1, symbol);
+    do s.setCharAt(l+1, 41);  // ')'
+    do s.setCharAt(l+2, 10);   // '\n'
+    do s.setLength(l+3);
+
+    do File.write(_outfd, s);
+
+    do s.dispose();
     return;
+  }
+
+
+  method String _loadSymbolIntoA(String symbol)
+  {
+    var String s;
+    var int l;
+    let l = symbol.length();
+    let s = String.new(l+1);
+
+    do s.setCharAt(0, 64);   // '@'
+    do s.insert(1, symbol);
+    do s.setLength(l+1);
+    return s;
   }
 
   method void _goto(String symbol)
   {
+    var String s;
+    let s = _loadSymbolIntoA(symbol);
+    do File.write(_outfd, s);
+    do File.write(_outfd, ZERO_JUMP);
+
+    do s.dispose();
     return;
   }
 
   method void _if_goto(String symbol)
   {
+    var String s;
+    let s = _loadSymbolIntoA(symbol);
+
+    do File.write(_outfd, POP_TO_D);
+    do File.write(_outfd, s);
+    do File.write(_outfd, D_JNE);
+
+
+    do s.dispose();
+
+    /**
+      @SP
+      AM=M-1
+      D=M
+      @<label>
+      D;JNE
+    */
     return;
   }
 
