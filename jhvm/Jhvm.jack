@@ -1,11 +1,8 @@
 class Jhvm {
   field String _outPath;
+  field String _fileName;
   field int _outfd;
-
   field int _arg2idx;
-
-  field int _SP;
-
   field int _eqCounter, _gtCounter, _ltCounter;
 
   static String DOTASM;
@@ -89,7 +86,6 @@ class Jhvm {
   constructor Jhvm new()
   {
     let _outfd = -1;
-    let _SP = 256;
     return this;
   }
 
@@ -221,7 +217,25 @@ class Jhvm {
       do _outPath.setLength(l+4);
     }
 
+
+    do _fileNameFromPath(_outPath);
+
     return _outPath;
+  }
+
+  method void _fileNameFromPath(String path)
+  {
+    var int start,end;
+
+    if (~(_fileName = null)) {
+      do _fileName.dispose();
+    }
+    let start = path.rightIndexOfChar(47, 0);  // '/'
+    let start = start+1;
+
+    let end = path.rightIndexOfChar(46, 0);  // '.'
+    let _fileName =  path.subString(start, end-start+2);
+    return;
   }
 
   method boolean openOutputFile()
@@ -395,15 +409,6 @@ class Jhvm {
     return ret;
   }
 
-  method int _resolveSegment(String segment, int offset)
-  {
-    if (segment.compare(0, CONSTANT,0, 8) = 0) {
-      return offset;
-    }
-
-    return -1;
-  }
-
   method void _push(String segment, int offset) 
   {
     var String staticLabel;
@@ -518,11 +523,9 @@ class Jhvm {
       do File.write(_outfd, PUSH_POSTAMBLE);
     } else {
     if (segment.compare(0, STATIC,0, 6) = 0) {
-      let staticLabel = String.new(5+5);
-      do staticLabel.insert(0, "@Foo.");
-      do staticLabel.setLength(staticLabel.setIntAt(5, offset)+5);
 
       do File.write(_outfd, "\n// push static\n");
+      let staticLabel = _staticLabel(offset);
 
       do File.write(_outfd, staticLabel);
       do File.write(_outfd, D_EQ_M);
@@ -535,6 +538,19 @@ class Jhvm {
     }}}}}}}}
 
     return;
+  }
+
+  method String _staticLabel(int offset)
+  {
+    var String staticLabel;
+    var int l;
+    let l = _fileName.length();
+
+    let staticLabel = String.new(l+6);
+    do staticLabel.setCharAt(0, 64);  // '@'
+    do staticLabel.insert(1, _fileName);
+    do staticLabel.setLength(l+staticLabel.setIntAt(l, offset));
+    return staticLabel;
   }
 
   method void _pop(String segment, int offset) {
@@ -597,9 +613,7 @@ class Jhvm {
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, STATIC,0, 6) = 0) {
-      let staticLabel = String.new(5+5);
-      do staticLabel.insert(0, "@Foo.");
-      do staticLabel.setLength(staticLabel.setIntAt(5, offset)+5);
+      let staticLabel = _staticLabel(offset);
 
       /** Pop static
         // D = *--SP
