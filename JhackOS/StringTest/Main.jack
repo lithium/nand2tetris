@@ -13,6 +13,9 @@ class Main {
         var Array b;
         var Array a;
         var int idx;
+
+
+        do String.init();
         
         let s = String.new(0); // A zero-capacity string should be supported
         do s.dispose();
@@ -33,7 +36,15 @@ class Main {
         do Output.printString(i);                // setInt: 12345
 
         do i.setInt(-32767);
-        do Output.printString(",   -32767 ==");
+        do Output.printString(",  -32767 == ");
+        do Output.printString(i);                // setInt: -32767
+
+        do i.setInt(0);
+        do Output.printString(",  0 == ");
+        do Output.printString(i);                // setInt: -32767
+
+        do i.setInt(1);
+        do Output.printString(",  1 == ");
         do Output.printString(i);                // setInt: -32767
         do Output.println();
         
@@ -145,11 +156,11 @@ class Main {
         let i = "barbaz";
         let b = i.bytes();
 
-        let idx = String.cmp(a, b, 6);
+        let idx = String.strcmp(a, b, 6);
         do Output.printString("String.cmp: -28 == ");
         do Output.printInt(idx);
 
-        let idx = String.cmp(b, a, 6);
+        let idx = String.strcmp(b, a, 6);
         do Output.printString("  28 == ");
         do Output.printInt(idx);
         do Output.println();

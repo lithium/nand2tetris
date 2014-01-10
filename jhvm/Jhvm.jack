@@ -1,0 +1,939 @@
+class Jhvm {
+  field String _outPath;
+  field String _fileName;
+  field int _outfd;
+  field int _arg2idx;
+  field int _eqCounter, _gtCounter, _ltCounter;
+
+  static String DOTASM;
+  static String DOTVM;
+  static String SLASHES;
+  static String TRANSLATING;
+  static String WHITESPACE;
+  static String COMMENT;
+
+  static String ADD;
+  static String SUB;
+  static String NEG;
+  static String EQ;
+  static String GT;
+  static String LT;
+  static String AND;
+  static String OR;
+  static String NOT;
+  static String PUSH;
+  static String POP;
+  static String ARGUMENT;
+  static String LOCAL;
+  static String STATIC;
+  static String CONSTANT;
+  static String THIS;
+  static String THAT;
+  static String POINTER;
+  static String TEMP;
+  static String LABEL;
+  static String GOTO;
+  static String IFGOTO;
+  static String FUNCTION;
+  static String CALL;
+  static String RETURN;
+  static String EQ;
+  static String LT;
+  static String GT;
+
+  static String PUSH_POSTAMBLE;
+  static String PUSH_SEGMENT;
+  static String THIS_SEGMENT;
+  static String THAT_SEGMENT;
+  static String POP_PREAMBLE;
+  static String POP_POSTAMBLE;
+  static String POP_FIRSTARG;
+  static String POP_SECONDARG;
+  static String STACK_INC;
+  static String ADD_MD;
+  static String SUB_MD;
+  static String AND_MD;
+  static String OR_MD;
+  static String NEG_PUSHRETURN;
+  static String NOT_PUSHRETURN;
+
+  static String COND_PREAMBLE;
+  static String COND_POSTAMBLE;
+  static String COND_EQ;
+  static String COND_EQ_PREFIX;
+  static String sLabelBuffer, sLabelBuffer2;
+
+  static String COND_LT_BEGIN;
+  static String COND_LT_END;
+  static String COND_LT;
+  static String COND_GT_BEGIN;
+  static String COND_GT_END;
+  static String COND_GT;
+  static String COND_JMP;
+  static String COND_D_TRUE;
+
+  static String D_EQ_A;
+  static String D_EQ_M;
+  static String AT_LOCAL;
+  static String AT_ARG;
+  static String AT_THIS;
+  static String AT_THAT;
+  static String AT_TEMP;
+
+  static String POP_TO_D;
+  static String M_EQ_D;
+
+  constructor Jhvm new()
+  {
+    let _outfd = -1;
+    return this;
+  }
+
+  function void init()
+  {
+    let DOTVM = ".vm";
+    let DOTASM = ".asm";
+    let SLASHES = "/\\";
+    let TRANSLATING = "Translating ";
+    let WHITESPACE = " \t";
+    let COMMENT = "//";
+
+    let ADD = "add";
+    let SUB = "sub";
+    let NEG = "neg";
+    let EQ = "eq";
+    let GT = "gt";
+    let LT = "lt";
+    let AND = "and";
+    let OR = "or";
+    let NOT = "not";
+    let PUSH = "push";
+    let POP = "pop";
+    let EQ = "eq";
+    let LT = "lt";
+    let GT = "gt";
+    let ARGUMENT = "argument";
+    let LOCAL = "local";
+    let STATIC = "static";
+    let CONSTANT = "constant";
+    let THIS = "this";
+    let THAT = "that";
+    let POINTER = "pointer";
+    let TEMP = "temp";
+    let LABEL = "label";
+    let GOTO = "goto";
+    let IFGOTO = "if-goto";
+    let FUNCTION = "function";
+    let CALL = "call";
+    let RETURN = "return";
+
+
+    // translated push command
+    //    @<value>
+    //    D=A
+    //    @SP
+    //    A=M
+    //    M=D
+    //    @SP
+    //    M=M+1
+    let PUSH_POSTAMBLE = "\n @SP\n A=M\n M=D\n @SP\n M=M+1\n";
+    let PUSH_SEGMENT = "\n D=D+M\n A=D\n D=M\n";
+
+    let POP_TO_D = "\n @SP\n AM=M-1\n D=M\n";
+    let M_EQ_D = "\n M=D\n";
+
+    // pop from memory segment with offset
+    let D_EQ_A = "\n D=A\n";
+    let D_EQ_M = "\n D=M\n";
+    let POP_POSTAMBLE = "\n D=D+M\n @R15\n M=D\n @SP\n M=M-1\n A=M\n D=M\n @R15\n A=M\n M=D\n";
+    let AT_LOCAL = "\n @LCL\n";
+    let AT_ARG = "\n @ARG\n";
+    let AT_THIS = "\n @THIS\n";
+    let AT_THAT = "\n @THAT\n";
+    let AT_TEMP = "\n @R5\n";
+
+
+    // stack operations
+
+    let POP_FIRSTARG = "\n @SP\n M=M-1\n A=M\n D=M\n";
+    let POP_SECONDARG = "\n @SP\n M=M-1\n A=M\n";
+   
+    let STACK_INC = "\n @SP\n M=M+1\n";
+
+    let NEG_PUSHRETURN = "\n @SP\n A=M\n M=-D\n @SP\nM=M+1\n";
+    let NOT_PUSHRETURN = "\n @SP\n A=M\n M=!D\n @SP\nM=M+1\n";
+
+    // arithmetic operations
+    let ADD_MD = "\n M=M+D\n";
+    let SUB_MD = "\n M=M-D\n";
+    let AND_MD = "\n M=M&D\n";
+    let OR_MD  = "\n M=M|D\n";
+
+
+    let sLabelBuffer = String.new(11); // (ifxxNNNNN)
+    let sLabelBuffer2 = String.new(11); // (ifxxNNNNN)
+    let COND_PREAMBLE = "\n @SP\n M=M-1\n A=M\n D=M\n @SP\n M=M-1\n A=M\n D=D-M\n";
+    let COND_POSTAMBLE = "\n @SP\n A=M\n M=!D\n @SP\n M=M+1\n";
+
+    let COND_EQ_PREFIX = "@ifeq";
+    let COND_EQ = "\n D;JEQ\n D=-1\n";
+
+    let COND_LT_BEGIN = "@iflt";
+    let COND_LT_END = "@filt";
+    let COND_LT = "\n D;JLE\n D=0\n";
+    let COND_GT_BEGIN = "@ifgt";
+    let COND_GT_END = "@figt";
+    let COND_GT = "\n D;JGE\n D=0\n";
+    let COND_JMP = "\n 0;JMP\n";
+    let COND_D_TRUE = "\n D=-1\n";
+
+    do Path.init();
+    return;
+  }
+
+  method String setOutputPath(String argument)
+  {
+    var int l;
+    var Array a;
+
+    let l = argument.length();
+    let a = argument.bytes();
+
+    if (argument.compare(-3, DOTVM, 0, 3) = 0) {
+      // replace .vm with .asm
+
+      let _outPath = String.new(l+1);
+      do Array.copy(_outPath.bytes(), a, l-2);
+      do Array.copy(_outPath.bytes()+l-2, DOTASM.bytes()+1, 3);
+      do _outPath.setLength(l+1);
+    } else {
+      // trim any trailing / and append .asm
+
+      do argument.rstrip(SLASHES);
+      let l = argument.length();
+      let _outPath = String.new(l+4);
+      do Array.copy(_outPath.bytes(), a, l);
+      do Array.copy(_outPath.bytes()+l, DOTASM.bytes(), 4);
+      do _outPath.setLength(l+4);
+    }
+
+
+    do _fileNameFromPath(_outPath);
+
+    return _outPath;
+  }
+
+  method void _fileNameFromPath(String path)
+  {
+    var int start,end;
+
+    if (~(_fileName = null)) {
+      do _fileName.dispose();
+    }
+    let start = path.rightIndexOfChar(47, 0);  // '/'
+    let start = start+1;
+
+    let end = path.rightIndexOfChar(46, 0);  // '.'
+    let _fileName =  path.subString(start, end-start+2);
+    return;
+  }
+
+  method boolean openOutputFile()
+  {
+    if (_outPath = null) {
+      return false;
+    }
+    let _outfd = File.open(_outPath, 1);
+    return (~(_outfd = -1));
+  }
+  method boolean closeOutputFile() 
+  {
+    if (_outfd = -1) {
+      return false;
+    }
+    do File.close(_outfd);
+    let _outfd = -1;
+    return true;
+  }
+  method int _nextTokenEnd(String line, int start) 
+  {
+    var int idx;
+
+    let idx = line.indexOfChar(32, start);   // ' '
+    if (idx = -1) {
+      let idx = line.length();
+    }
+    return idx;
+  }
+
+  method boolean translateFile(String filename)
+  {
+    var int fh;
+    var String line;
+    var String arg1;
+
+    do Output.printString(TRANSLATING);
+    do Output.printString(filename);
+    do Output.println();
+
+
+    let fh = File.open(filename, 0);
+    if (fh = -1) {
+      return false;
+    }
+
+    while(File.ready(fh) = 1) {
+      let line = File.readln(fh);
+
+      do Jhvm.stripWhitespace(line);
+      if (line.length() > 0) {
+      /*
+        do Output.printString("IN:");
+        do Output.printString(line);
+        do Output.println();
+      */
+
+        let arg1 = null;
+        if (line.compare(0, PUSH, 0, 4) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _push(arg1, _parseArgument2(line));
+        } else {
+        if (line.compare(0, POP, 0, 3) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _pop(arg1, _parseArgument2(line));
+        } else {
+        if (line.compare(0, FUNCTION, 0, 8) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _function(arg1, _parseArgument2(line));
+        } else {
+        if (line.compare(0, CALL, 0, 3) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _call(arg1, _parseArgument2(line));
+        } else {
+        if (line.compare(0, LABEL, 0, 5) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _label(arg1);
+        } else {
+        if (line.compare(0, GOTO, 0, 4) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _goto(arg1);
+        } else {
+        if (line.compare(0, IFGOTO, 0, 6) = 0) {
+          let arg1 = _parseArgument1(line);
+          do _if_goto(arg1);
+        } else {
+        if (line.compare(0, RETURN, 0, 6) = 0) {
+          do _return();
+        } else {
+        if (line.compare(0, ADD, 0, 3) = 0) {
+          do _add();
+        } else {
+        if (line.compare(0, SUB, 0, 3) = 0) {
+          do _sub();
+        } else {
+        if (line.compare(0, NEG, 0, 3) = 0) {
+          do _neg();
+        } else {
+        if (line.compare(0, AND, 0, 3) = 0) {
+          do _and();
+        } else {
+        if (line.compare(0, OR, 0, 2) = 0) {
+          do _or();
+        } else {
+        if (line.compare(0, NOT, 0, 3) = 0) {
+          do _not();
+        } else {
+        if (line.compare(0, EQ, 0, 2) = 0) {
+          do _eq();
+        } else {
+        if (line.compare(0, LT, 0, 2) = 0) {
+          do _lt();
+        } else {
+        if (line.compare(0, GT, 0, 2) = 0) {
+          do _gt();
+        } else {
+          do Output.printString("unhandled: ");
+          do Output.printString(line);
+          do Output.println();
+        }}}}}}}}}}}}}}}}}
+
+        if (~(arg1 = null)) {
+          do arg1.dispose();
+          let arg1 = null;
+        }
+
+
+      }
+
+      do line.dispose();
+    }
+    return true;
+  }
+
+  function void stripWhitespace(String line) 
+  {
+    var int idx;
+
+    // strip comments
+    let idx = line.indexOf(COMMENT);
+    if (~(idx = -1)) {
+      do line.setLength(idx);
+    }
+
+    // strip whitespace
+    do line.rstrip(WHITESPACE);
+    do line.lstrip(WHITESPACE);
+
+    return;
+  }
+
+  method String _parseArgument1(String line)
+  {
+    var int argsStart;
+    var int idx;
+
+    let argsStart = _nextTokenEnd(line, 0)+1;
+    let _arg2idx = _nextTokenEnd(line, argsStart)+1;
+
+    return line.subString(argsStart, _arg2idx - argsStart-1);
+  }
+  method int _parseArgument2(String line)
+  {
+    var String arg2;
+    var int ret;
+
+    let arg2 = line.subString(_arg2idx, line.length()-_arg2idx);
+    let ret = arg2.intValue();
+    do arg2.dispose();
+
+    return ret;
+  }
+
+  method void _push(String segment, int offset) 
+  {
+    var String staticLabel;
+
+    do Output.printString("Push segment:");
+    do Output.printString(segment);
+    do Output.printString(" offset:");
+    do Output.printInt(offset);
+    do Output.println();
+
+
+    if (segment.compare(0, CONSTANT,0, 8) = 0) {
+
+      do File.write(_outfd, "\n// push constant\n");
+
+      do bufferLabelInteger(offset);
+
+      //    @<value>
+      //    D=A
+      //    @SP
+      //    A=M
+      //    M=D
+      //    @SP
+      //    M=M+1
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+    } else {
+    if (segment.compare(0, THIS,0, 4) = 0) {
+
+      do File.write(_outfd, "\n// push this\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, AT_THIS);
+      do File.write(_outfd, PUSH_SEGMENT);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+
+    /** Push from memory segment
+
+        @<offset>       // D = *(THIS+3)
+        D=A
+        @<segment>
+        D=D+M
+        A=D
+        D=M
+
+        @SP             // *SP++ = D
+        A=M
+        M=D
+        @SP
+        M=M+1
+    */
+
+    } else {
+    if (segment.compare(0, LOCAL,0, 5) = 0) {
+
+      do File.write(_outfd, "\n// push local\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, AT_LOCAL);
+      do File.write(_outfd, PUSH_SEGMENT);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, ARGUMENT,0, 8) = 0) {
+
+      do File.write(_outfd, "\n// push argument\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, AT_ARG);
+      do File.write(_outfd, PUSH_SEGMENT);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+    } else {
+    if (segment.compare(0, THAT,0, 4) = 0) {
+
+      do File.write(_outfd, "\n// push that\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, AT_THAT);
+      do File.write(_outfd, PUSH_SEGMENT);
+
+      do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, TEMP,0, 4) = 0) {
+      do File.write(_outfd, "\n// push temp\n");
+
+      do bufferLabelInteger(offset + 5);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_M);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, POINTER,0, 7) = 0) {
+      do File.write(_outfd, "\n// push pointer\n");
+      
+      do bufferLabelInteger(offset + 3);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_M);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+    } else {
+    if (segment.compare(0, STATIC,0, 6) = 0) {
+
+      do File.write(_outfd, "\n// push static\n");
+      let staticLabel = _staticLabel(offset);
+
+      do File.write(_outfd, staticLabel);
+      do File.write(_outfd, D_EQ_M);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+      do staticLabel.dispose();
+
+    } else {
+
+    }}}}}}}}
+
+    return;
+  }
+
+  method String _staticLabel(int offset)
+  {
+    var String staticLabel;
+    var int l;
+    let l = _fileName.length();
+
+    let staticLabel = String.new(l+6);
+    do staticLabel.setCharAt(0, 64);  // '@'
+    do staticLabel.insert(1, _fileName);
+    do staticLabel.setLength(l+staticLabel.setIntAt(l, offset));
+    return staticLabel;
+  }
+
+  method void _pop(String segment, int offset) {
+    var String staticLabel;
+
+    do Output.printString("Pop segment:");
+    do Output.printString(segment);
+    do Output.printString(" offset:");
+    do Output.printInt(offset);
+    do Output.println();
+
+    do bufferLabelInteger(offset);
+
+
+    if (segment.compare(0, LOCAL,0, 5) = 0) {
+      do File.write(_outfd, "\n// pop local\n");
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_LOCAL);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, ARGUMENT,0, 8) = 0) {
+      do File.write(_outfd, "\n// pop argument\n");
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_ARG);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, THIS,0, 4) = 0) {
+      do File.write(_outfd, "\n// pop this\n");
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_THIS);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, THAT,0, 4) = 0) {
+      do File.write(_outfd, "\n// pop that\n");
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_THAT);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, TEMP,0, 4) = 0) {
+      do bufferLabelInteger(offset+5);
+
+      do File.write(_outfd, "\n// pop temp\n");
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_TEMP);
+      do File.write(_outfd, POP_POSTAMBLE);
+
+    } else {
+    if (segment.compare(0, POINTER,0, 7) = 0) {
+      do bufferLabelInteger(offset+3);
+
+      do File.write(_outfd, "\n// pop pointer\n");
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_TEMP);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, STATIC,0, 6) = 0) {
+      let staticLabel = _staticLabel(offset);
+
+      /** Pop static
+        // D = *--SP
+        @SP
+        AM=M-1
+        D=M
+
+        @<file>.<offset>
+        M=D
+      */
+
+
+      do File.write(_outfd, "\n// pop static \n");
+      do File.write(_outfd, POP_TO_D);
+      do File.write(_outfd, staticLabel);
+      do File.write(_outfd, M_EQ_D);
+
+      do staticLabel.dispose();
+
+    } else {
+
+    }}}}}}}
+
+     
+      /*
+        // R15 = LCL+3
+        @3
+        D=A
+        @LCL
+        D=D+M
+        @R15
+        M=D
+
+        // D = *--SP
+        @SP
+        M=M-1
+        A=M
+        D=M
+
+        // *R15 = D
+        @R15
+        A=M
+        M=D
+      */
+
+
+    return;
+  }
+
+  method void _add()
+  {
+    do Output.printString("Add");
+    do Output.println();
+
+    do File.write(_outfd, "\n// add\n");
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
+    do File.write(_outfd, ADD_MD);
+    do File.write(_outfd, STACK_INC);
+
+    //    @SP           // D = *--SP
+    //    M=M-1
+    //    A=M
+    //    D=M
+
+    //    @SP           // *SP++ = *--SP + D
+    //    M=M-1
+    //    A=M
+    //    M=M+D
+    //    @SP
+    //    M=M+1
+    return;
+  }
+
+
+  method void _neg()
+  {
+    do Output.printString("Neg");
+    do Output.println();
+
+    do File.write(_outfd, "\n// neg\n");
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, NEG_PUSHRETURN);
+    //    @SP           // D = *--SP
+    //    M=M-1
+    //    A=M
+    //    D=M
+
+    //    @SP              // *SP++ = -D
+    //    A=M
+    //    M=-D
+    //    @SP
+    //    M=M+1
+
+    return;
+  }
+
+
+  method void _sub()
+  {
+    do Output.printString("Sub");
+    do Output.println();
+
+    do File.write(_outfd, "\n// sub\n");
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
+    do File.write(_outfd, SUB_MD);
+    do File.write(_outfd, STACK_INC);
+    return;
+ 
+  }
+
+  method void _and()
+  {
+    do Output.printString("And");
+    do Output.println();
+
+    do File.write(_outfd, "\n// and\n");
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
+    do File.write(_outfd, AND_MD);
+    do File.write(_outfd, STACK_INC);
+    return;
+  }
+
+  method void _or()
+  {
+    do Output.printString("Or");
+    do Output.println();
+
+    do File.write(_outfd, "\n// or\n");
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, POP_SECONDARG);
+    do File.write(_outfd, OR_MD);
+    do File.write(_outfd, STACK_INC);
+    return;
+  }
+
+  method void _not()
+  {
+    do Output.printString("Not");
+    do Output.println();
+
+    do File.write(_outfd, "\n// not\n");
+    do File.write(_outfd, POP_FIRSTARG);
+    do File.write(_outfd, NOT_PUSHRETURN);
+    return;
+  }
+
+
+  // create instruction that loads label into accumulator
+  method void bufferLabelLoad(String buffer, String prefix, int counter)
+  {
+    var int l;
+
+    let l = prefix.length();
+    do buffer.insert(0, prefix);    
+    do buffer.setLength(l);
+    do buffer.setIntAt(l, counter);
+    return;
+  }
+  // update label buffer to create label define instruction 
+  method void bufferLabelDefine(String buffer)
+  {
+    do buffer.setCharAt(0, 40);   // '('
+    do buffer.appendChar(41);      // ')'
+    return;
+  }
+
+  method void bufferLabelInteger(int value) {
+    do sLabelBuffer.setCharAt(0, 64);   // '@'
+    do sLabelBuffer.setLength(sLabelBuffer.setIntAt(1, value)+1);
+    return;
+  }
+
+  method void _eq()
+  {
+    do Output.printString("= ");
+    do Output.println();
+
+    do File.write(_outfd, "\n// eq\n");
+
+    do bufferLabelLoad(sLabelBuffer, COND_EQ_PREFIX, _eqCounter);
+    let _eqCounter = _eqCounter+1;
+
+    do File.write(_outfd, COND_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_EQ);
+
+    do bufferLabelDefine(sLabelBuffer);
+
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_POSTAMBLE);
+/*
+        @SP           // D = *--SP
+        M=M-1
+        A=M
+        D=M
+
+        @SP           // D -= *--SP
+        M=M-1
+        A=M
+        D=D-M
+
+        @ifeq         // if d != false: d = true
+        D;JEQ         
+        D=-1
+      (ifeq)
+
+        @SP           // *SP++ = D
+        A=M 
+        M=!D
+        @SP           
+        M=M+1   
+*/
+
+
+    return;
+  }
+
+  method void _gt()
+  {
+    do Output.printString("Gt ");
+    do Output.println();
+
+    do File.write(_outfd, "\n// gt\n");
+
+    do bufferLabelLoad(sLabelBuffer, COND_GT_BEGIN, _gtCounter);
+    do bufferLabelLoad(sLabelBuffer2, COND_GT_END, _gtCounter);
+    let _gtCounter = _gtCounter+1;
+
+    do File.write(_outfd, COND_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_GT);
+
+    do File.write(_outfd, sLabelBuffer2);
+    do File.write(_outfd, COND_JMP);
+
+    do bufferLabelDefine(sLabelBuffer);
+    do bufferLabelDefine(sLabelBuffer2);
+
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_D_TRUE);
+    do File.write(_outfd, sLabelBuffer2);
+
+    do File.write(_outfd, COND_POSTAMBLE);
+
+    return;
+  }
+
+  method void _lt()
+  {
+    do Output.printString("< ");
+    do Output.println();
+
+    do File.write(_outfd, "\n// lt\n");
+
+    do bufferLabelLoad(sLabelBuffer, COND_LT_BEGIN, _ltCounter);
+    do bufferLabelLoad(sLabelBuffer2, COND_LT_END, _ltCounter);
+    let _ltCounter = _ltCounter+1;
+
+    do File.write(_outfd, COND_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_LT);
+
+    do File.write(_outfd, sLabelBuffer2);
+    do File.write(_outfd, COND_JMP);
+
+    do bufferLabelDefine(sLabelBuffer);
+    do bufferLabelDefine(sLabelBuffer2);
+
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, COND_D_TRUE);
+    do File.write(_outfd, sLabelBuffer2);
+
+    do File.write(_outfd, COND_POSTAMBLE);
+
+    /* preamble...
+        @iflt         // d = (d < 0 ? true : false)
+        D;JLT       
+        D=0
+        @filt
+        0;JMP
+      (iflt)
+        D=-1
+      (filt)
+
+      postamble...*/
+
+    return;
+  }
+
+  method void _function(String functionName, int nLocals)
+  {
+    return;
+  }
+
+  method void _call(String functionName, int nArgs)
+  {
+    return;
+  }
+
+  method void _return()
+  {
+    return;
+  }
+
+  method void _label(String symbol)
+  {
+    return;
+  }
+
+  method void _goto(String symbol)
+  {
+    return;
+  }
+
+  method void _if_goto(String symbol)
+  {
+    return;
+  }
+
+}

@@ -1,0 +1,15 @@
+
+
+class Main 
+{
+  function void main() {
+    var int i;
+
+    let i = Integer.modulo(7, 5);
+
+    do Output.printString("7 % 5 = ");
+    do Output.printInt(i);
+    do Output.println();
+    return;
+  }
+}

@@ -2,3 +2,5 @@
 *.hack
 *.vm
 projects/00
+projects/07/**/*.asm
+projects/08/**/*.asm
