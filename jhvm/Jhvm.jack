@@ -45,6 +45,9 @@ class Jhvm {
   static String GT;
 
   static String PUSH_POSTAMBLE;
+  static String PUSH_SEGMENT;
+  static String THIS_SEGMENT;
+  static String THAT_SEGMENT;
   static String POP_PREAMBLE;
   static String POP_POSTAMBLE;
   static String POP_FIRSTARG;
@@ -133,7 +136,10 @@ class Jhvm {
     //    M=D
     //    @SP
     //    M=M+1
-    let PUSH_POSTAMBLE = "\n D=A\n @SP\n A=M\n M=D\n @SP\n M=M+1\n";
+    let PUSH_POSTAMBLE = "\n @SP\n A=M\n M=D\n @SP\n M=M+1\n";
+    let PUSH_SEGMENT = "\n D=D+M\n A=D\n D=M\n";
+    let THIS_SEGMENT = " @THIS\n";
+    let THAT_SEGMENT = " @THAT\n";
 
 
     // pop from memory segment with offset
@@ -394,8 +400,6 @@ class Jhvm {
 
   method void _push(String segment, int offset) 
   {
-    var int value;
-    var String loadValue;
 
     do Output.printString("Push segment:");
     do Output.printString(segment);
@@ -403,13 +407,12 @@ class Jhvm {
     do Output.printInt(offset);
     do Output.println();
 
-    let loadValue = String.new(6);
-    do loadValue.setCharAt(0, 64);     // '@'
-    do loadValue.setLength(loadValue.setIntAt(1, value)+1);
 
-    do File.write(_outfd, "\n// push\n");
-    
     if (segment.compare(0, CONSTANT,0, 8) = 0) {
+
+      do File.write(_outfd, "\n// push constant\n");
+
+      do bufferLabelInteger(offset);
 
       //    @<value>
       //    D=A
@@ -418,18 +421,62 @@ class Jhvm {
       //    M=D
       //    @SP
       //    M=M+1
-      do File.write(_outfd, loadValue);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, PUSH_POSTAMBLE);
 
-    }
+    } else {
+    if (segment.compare(0, THIS,0, 4) = 0) {
 
-    do loadValue.dispose();
+      do File.write(_outfd, "\n// push this\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, THIS_SEGMENT);
+      do File.write(_outfd, PUSH_SEGMENT);
+
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+
+    /** Push from memory segment
+
+        @<offset>       // D = *(THIS+3)
+        D=A
+        @<segment>
+        D=D+M
+        A=D
+        D=M
+
+        @SP             // *SP++ = D
+        A=M
+        M=D
+        @SP
+        M=M+1
+    */
+
+
+    } else {
+    if (segment.compare(0, THAT,0, 4) = 0) {
+
+      do File.write(_outfd, "\n// push that\n");
+
+      do bufferLabelInteger(offset);
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+
+      do File.write(_outfd, THAT_SEGMENT);
+      do File.write(_outfd, PUSH_SEGMENT);
+
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+    }}}
+
     return;
   }
 
   method void _pop(String segment, int offset) {
-    var int address;
-    var String loadValue;
 
     do Output.printString("Pop segment:");
     do Output.printString(segment);
@@ -437,38 +484,36 @@ class Jhvm {
     do Output.printInt(offset);
     do Output.println();
 
-    let loadValue = String.new(6);
-    do loadValue.setCharAt(0, 64);     // '@'
-    do loadValue.setLength(loadValue.setIntAt(1, offset) + 1);
+    do bufferLabelInteger(offset);
 
     do File.write(_outfd, "\n// pop\n");
 
     if (segment.compare(0, LOCAL,0, 5) = 0) {
-      do File.write(_outfd, loadValue);
+      do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_LOCAL);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, ARGUMENT,0, 8) = 0) {
-      do File.write(_outfd, loadValue);
+      do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_ARG);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, THIS,0, 4) = 0) {
-      do File.write(_outfd, loadValue);
+      do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_THIS);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, THAT,0, 4) = 0) {
-      do File.write(_outfd, loadValue);
+      do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_THAT);
       do File.write(_outfd, POP_POSTAMBLE);
     } else {
     if (segment.compare(0, TEMP,0, 4) = 0) {
-      do File.write(_outfd, loadValue);
+      do File.write(_outfd, sLabelBuffer);
       do File.write(_outfd, D_EQ_A);
       do File.write(_outfd, AT_TEMP);
       do File.write(_outfd, POP_POSTAMBLE);
@@ -619,6 +664,12 @@ class Jhvm {
   {
     do buffer.setCharAt(0, 40);   // '('
     do buffer.appendChar(41);      // ')'
+    return;
+  }
+
+  method void bufferLabelInteger(int value) {
+    do sLabelBuffer.setCharAt(0, 64);   // '@'
+    do sLabelBuffer.setLength(sLabelBuffer.setIntAt(1, value)+1);
     return;
   }
 
