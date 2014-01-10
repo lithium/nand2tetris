@@ -151,7 +151,7 @@ class String {
         return;
     }
 
-    method void setIntAt(int index, int number) 
+    method int setIntAt(int index, int number) 
     {
         var int i;
         var int numDigits;
@@ -188,7 +188,7 @@ class String {
             let _size = index+numDigits;
         }
 
-        return;
+        return numDigits;
 
     }
 

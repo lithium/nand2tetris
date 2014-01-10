@@ -72,6 +72,13 @@ class Jhvm {
   static String COND_JMP;
   static String COND_D_TRUE;
 
+  static String D_EQ_A;
+  static String AT_LOCAL;
+  static String AT_ARG;
+  static String AT_THIS;
+  static String AT_THAT;
+  static String AT_TEMP;
+
   constructor Jhvm new()
   {
     let _outfd = -1;
@@ -129,15 +136,14 @@ class Jhvm {
     let PUSH_POSTAMBLE = "\n D=A\n @SP\n A=M\n M=D\n @SP\n M=M+1\n";
 
 
-    // translated pop command
-    //  @SP           
-    //  M=M-1
-    //  A=M
-    //  D=M
-    //  @<address>    
-    //  M=D
-    let POP_PREAMBLE = "\n @SP\n M=M-1\n A=M\n D=M\n ";
-    let POP_POSTAMBLE = "\n M=D\n";
+    // pop from memory segment with offset
+    let D_EQ_A = "\n D=A\n";
+    let POP_POSTAMBLE = "\n D=D+M\n @R15\n M=D\n @SP\n M=M-1\n A=M\n D=M\n @R15\n A=M\n M=D\n";
+    let AT_LOCAL = "\n @LCL\n";
+    let AT_ARG = "\n @ARG\n";
+    let AT_THIS = "\n @THIS\n";
+    let AT_THAT = "\n @THAT\n";
+    let AT_TEMP = "\n @R5\n";
 
 
     // stack operations
@@ -428,20 +434,66 @@ class Jhvm {
     do Output.printInt(offset);
     do Output.println();
 
-    let address = _resolveSegment(segment, offset);
     let loadValue = String.new(6);
     do loadValue.setCharAt(0, 64);     // '@'
-    do loadValue.setIntAt(1, address);
+    do loadValue.setLength(loadValue.setIntAt(1, offset) + 1);
 
-    //  @SP           
-    //  M=M-1
-    //  A=M
-    //  D=M
-    //  @<address>    
-    //  M=D
-    do File.write(_outfd, POP_PREAMBLE);
-    do File.write(_outfd, loadValue);
-    do File.write(_outfd, POP_POSTAMBLE);
+    do File.write(_outfd, "\n// pop\n");
+
+    if (segment.compare(0, LOCAL,0, 5) = 0) {
+      do File.write(_outfd, loadValue);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_LOCAL);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, ARGUMENT,0, 8) = 0) {
+      do File.write(_outfd, loadValue);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_ARG);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, THIS,0, 4) = 0) {
+      do File.write(_outfd, loadValue);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_THIS);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, THAT,0, 4) = 0) {
+      do File.write(_outfd, loadValue);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_THAT);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+    if (segment.compare(0, TEMP,0, 4) = 0) {
+      do File.write(_outfd, loadValue);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_TEMP);
+      do File.write(_outfd, POP_POSTAMBLE);
+    } else {
+
+    }}}}}
+
+     
+      /*
+        // R15 = LCL+3
+        @3
+        D=A
+        @LCL
+        D=D+M
+        @R15
+        M=D
+
+        // D = *--SP
+        @SP
+        M=M-1
+        A=M
+        D=M
+
+        // *R15 = D
+        @R15
+        A=M
+        M=D
+      */
 
 
     return;
