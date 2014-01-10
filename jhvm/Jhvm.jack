@@ -403,22 +403,25 @@ class Jhvm {
     do Output.printInt(offset);
     do Output.println();
 
-    let value = _resolveSegment(segment, offset);
     let loadValue = String.new(6);
     do loadValue.setCharAt(0, 64);     // '@'
-    do loadValue.setIntAt(1, value);
+    do loadValue.setLength(loadValue.setIntAt(1, value)+1);
 
-    //    @<value>
-    //    D=A
-    //    @SP
-    //    A=M
-    //    M=D
-    //    @SP
-    //    M=M+1
     do File.write(_outfd, "\n// push\n");
-    do File.write(_outfd, loadValue);
-    do File.write(_outfd, PUSH_POSTAMBLE);
+    
+    if (segment.compare(0, CONSTANT,0, 8) = 0) {
 
+      //    @<value>
+      //    D=A
+      //    @SP
+      //    A=M
+      //    M=D
+      //    @SP
+      //    M=M+1
+      do File.write(_outfd, loadValue);
+      do File.write(_outfd, PUSH_POSTAMBLE);
+
+    }
 
     do loadValue.dispose();
     return;
