@@ -563,10 +563,20 @@ class Jhvm {
       do File.write(_outfd, AT_TEMP);
       do File.write(_outfd, POP_POSTAMBLE);
 
+    } else {
+    if (segment.compare(0, POINTER,0, 7) = 0) {
+      do bufferLabelInteger(offset+3);
+
+      do File.write(_outfd, "\n// pop pointer\n");
+      do File.write(_outfd, sLabelBuffer);
+      do File.write(_outfd, D_EQ_A);
+      do File.write(_outfd, AT_TEMP);
+      do File.write(_outfd, POP_POSTAMBLE);
+
 
     } else {
 
-    }}}}}
+    }}}}}}
 
      
       /*
