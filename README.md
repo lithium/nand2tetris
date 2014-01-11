@@ -24,14 +24,9 @@ Secondly, I needed the ability to get the filename from the command-line argumen
 
 http://github.com/lithium/nand2tetris-open-source
 
-VM Translator (Jhack)
+VM Translator (jhvm)
 -------------
-Currently planning on implementing this in Jack.
-
-Desired additions:
- * some sort of linker for bundling libraries.
- * a native VM machine runner with no debugging/GUI, console stdin/stdout support.
-
+I implemented my VM Implementation in Jack.  I decided to "skip" chapter 9 as I think the last 3 chapters suffice for writing a high level language program in Jack. 
 
 Jack Compiler (Jhackc)
 ----
@@ -45,13 +40,14 @@ Improvements to make:
   * optional return in void function/method
   * variable arguments (printf)
   * Void generic pointer type
-  * support 'char' strings
+  * support 'char' character constants
+  * support constant strings (dont leak constant strings)
 
 
 JackOS (JHackOS)
 ----------------
 
-I started implementing the Chapter 12 Jack OS functions while I was using Jack to build the Assember for Chapter 6/9.  
+I started implementing the Chapter 12 Jack OS functions while I was using Jack to build the Assember and VM Implementation.  
 
 
 

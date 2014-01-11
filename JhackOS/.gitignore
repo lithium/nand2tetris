@@ -1,2 +1,5 @@
 *.vm
 *Test/*.asm
+*Test/Integer.jack
+*Test/String.jack
+*Test/Array.jack
