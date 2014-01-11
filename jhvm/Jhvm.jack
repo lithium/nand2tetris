@@ -3,7 +3,7 @@ class Jhvm {
   field String _fileName;
   field int _outfd;
   field int _arg2idx;
-  field int _eqCounter, _gtCounter, _ltCounter;
+  field int _eqCounter, _gtCounter, _ltCounter, _fnCounter;
 
   static String DOTASM;
   static String DOTVM;
@@ -349,7 +349,7 @@ class Jhvm {
         } else {
         if (line.compare(0, LABEL, 0, 5) = 0) {
           let arg1 = _parseArgument1(line);
-          do _label(arg1);
+          do _label(arg1, true);
         } else {
         if (line.compare(0, GOTO, 0, 4) = 0) {
           let arg1 = _parseArgument1(line);
@@ -943,7 +943,7 @@ class Jhvm {
     return;
   }
 
-  method void _label(String symbol)
+  method void _label(String symbol, boolean addFnPrefix)
   {
     var String s;
     var int l;
@@ -1018,8 +1018,9 @@ class Jhvm {
 
   method void _function(String functionName, int nLocals)
   {
-    do _label(functionName);
+    do _label(functionName, false);
     do File.write(_outfd, "\n// function\n");
+
     if (nLocals > 0) {
       do File.write(_outfd, MEMSET_PRE);
       while (nLocals > 0) {
@@ -1028,6 +1029,9 @@ class Jhvm {
         let nLocals = nLocals - 1;
       }
       do File.write(_outfd, MEMSET_POST);
+
+
+      let _fnCounter = _fnCounter + 1;
     }
 
 
@@ -1066,7 +1070,7 @@ class Jhvm {
     do File.write(_outfd, ZERO_JUMP);
 
     do strRetAddr.lstrip(AT);
-    do _label(strRetAddr);
+    do _label(strRetAddr, true);
 
     do strFun.dispose();
     do strRetAddr.dispose();
