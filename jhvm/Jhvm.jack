@@ -91,6 +91,11 @@ class Jhvm {
   static String CALL_PREAMBLE;
   static String CALL_POSTAMBLE;
 
+  static String INIT_SP;
+  static String SYS_INIT;
+  static String LABEL_PREFIX;
+  static String AT;
+  static String RET;
 
   constructor Jhvm new()
   {
@@ -208,6 +213,12 @@ class Jhvm {
     let CALL_POSTAMBLE = "\n D=D-A\n @5\n D=D-A\n @ARG\n M=D\n @SP\n D=M\n @LCL\n M=D\n";
 
 
+    let INIT_SP = " @256\n D=A\n@SP\nM=D\n";
+    let SYS_INIT = "Sys.init";
+    let LABEL_PREFIX = "fn";
+    let AT = "@";
+    let RET = "ret";
+
     do Path.init();
     return;
   }
@@ -265,7 +276,12 @@ class Jhvm {
       return false;
     }
     let _outfd = File.open(_outPath, 1);
-    return (~(_outfd = -1));
+    if (~(_outfd = -1)) {
+      do File.write(_outfd, INIT_SP);
+      do _call(SYS_INIT, 0);
+      return true;
+    }
+    return false;
   }
   method boolean closeOutputFile() 
   {
@@ -1003,6 +1019,7 @@ class Jhvm {
   method void _function(String functionName, int nLocals)
   {
     do _label(functionName);
+    do File.write(_outfd, "\n// function\n");
     if (nLocals > 0) {
       do File.write(_outfd, MEMSET_PRE);
       while (nLocals > 0) {
@@ -1029,16 +1046,14 @@ class Jhvm {
 
   method void _call(String functionName, int nArgs)
   {
-    var String s;
     var String strRetAddr, strFun;
-
-    let s = "return_address";
 
     do File.write(_outfd, "\n// call\n");
 
-    let strRetAddr = _loadSymbolIntoA(s);
+    let strRetAddr = _loadSymbolIntoA(RET);
     let strFun = _loadSymbolIntoA(functionName);
     do bufferLabelInteger(nArgs);
+
 
 
 
@@ -1049,11 +1064,12 @@ class Jhvm {
     do File.write(_outfd, CALL_POSTAMBLE);
     do File.write(_outfd, strFun);
     do File.write(_outfd, ZERO_JUMP);
-    do _label(functionName);
+
+    do strRetAddr.lstrip(AT);
+    do _label(strRetAddr);
 
     do strFun.dispose();
     do strRetAddr.dispose();
-    do s.dispose();
 
     /**
    
