@@ -1,6 +1,6 @@
 String.jack
 Array.jack
-Path.jack
-Integer.jack
-bin
+ArrayList.jack
+bin/
+tmp/
 *.vm

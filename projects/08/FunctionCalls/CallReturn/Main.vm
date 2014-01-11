@@ -1,0 +1,19 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/FunctionCalls/FibonacciElement/Main.vm
+
+// Computes the n'th element of the Fibonacci series, recursively.
+// n is given in argument[0].  Called by the Sys.init function 
+// (part of the Sys.vm file), which also pushes the argument[0] 
+// parameter before this code starts running.
+
+
+function Main.main 1
+push constant 400
+pop local 0
+push argument 0
+push local 0
+add
+return
+

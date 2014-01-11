@@ -1,6 +1,6 @@
 *.out
 *.hack
-*.vm
+.*sw*
 projects/00
-projects/07/**/*.asm
-projects/08/**/*.asm
+projects/13
+

@@ -3,7 +3,7 @@ class Jhvm {
   field String _fileName;
   field int _outfd;
   field int _arg2idx;
-  field int _eqCounter, _gtCounter, _ltCounter;
+  field int _eqCounter, _gtCounter, _ltCounter, _fnCounter, _retCounter;
 
   static String DOTASM;
   static String DOTVM;
@@ -56,6 +56,7 @@ class Jhvm {
   static String OR_MD;
   static String NEG_PUSHRETURN;
   static String NOT_PUSHRETURN;
+  static String RETURN_PREAMBLE;
 
   static String COND_PREAMBLE;
   static String COND_POSTAMBLE;
@@ -69,7 +70,8 @@ class Jhvm {
   static String COND_GT_BEGIN;
   static String COND_GT_END;
   static String COND_GT;
-  static String COND_JMP;
+  static String ZERO_JUMP;
+  static String D_JNE;
   static String COND_D_TRUE;
 
   static String D_EQ_A;
@@ -82,6 +84,18 @@ class Jhvm {
 
   static String POP_TO_D;
   static String M_EQ_D;
+
+  static String MEMSET_PRE;
+  static String INC_A;
+  static String MEMSET_POST;
+  static String CALL_PREAMBLE;
+  static String CALL_POSTAMBLE;
+
+  static String INIT_SP;
+  static String SYS_INIT;
+  static String LABEL_PREFIX;
+  static String AT;
+  static String RET;
 
   constructor Jhvm new()
   {
@@ -184,8 +198,27 @@ class Jhvm {
     let COND_GT_BEGIN = "@ifgt";
     let COND_GT_END = "@figt";
     let COND_GT = "\n D;JGE\n D=0\n";
-    let COND_JMP = "\n 0;JMP\n";
     let COND_D_TRUE = "\n D=-1\n";
+    let ZERO_JUMP = "\n 0;JMP\n";
+    let D_JNE = "\n D;JNE\n";
+
+
+    let MEMSET_PRE = "\n @SP\nA=M\n";
+    let INC_A = " M=0\n A=A+1\n";
+    let MEMSET_POST = "\n D=A\n @SP\n M=D\n";
+
+
+    let RETURN_PREAMBLE = "@LCL\n D=M\n @5\n A=D-A\n D=M\n @R14\n M=D\n @SP\n AM=M-1\n D=M\n @ARG\n A=M\n M=D\n AD=A+1\n @SP\n M=D\n @LCL\n AM=M-1\n D=M\n @THAT\n M=D\n @LCL\n AM=M-1\n D=M\n @THIS\n M=D\n @LCL\n AM=M-1\n D=M\n @ARG\n M=D\n @LCL\n AM=M-1\n D=M\n @LCL\n M=D\n @R14\n A=M\n 0;JMP\n";
+
+    let CALL_PREAMBLE = "\n D=A\n @SP\n A=M\n M=D\n @LCL\n D=M\n @SP\n AM=M+1\n M=D\n @ARG\n D=M\n @SP\n AM=M+1\n M=D\n @THIS\n D=M\n @SP\n AM=M+1\n M=D\n @THAT\n D=M\n @SP\n AM=M+1\n M=D\n @SP\n MD=M+1\n";
+    let CALL_POSTAMBLE = "\n D=D-A\n @5\n D=D-A\n @ARG\n M=D\n @SP\n D=M\n @LCL\n M=D\n";
+
+
+    let INIT_SP = " @256\n D=A\n@SP\nM=D\n";
+    let SYS_INIT = "Sys.init";
+    let LABEL_PREFIX = "fn";
+    let AT = "@";
+    let RET = "ret";
 
     do Path.init();
     return;
@@ -218,7 +251,6 @@ class Jhvm {
     }
 
 
-    do _fileNameFromPath(_outPath);
 
     return _outPath;
   }
@@ -244,7 +276,12 @@ class Jhvm {
       return false;
     }
     let _outfd = File.open(_outPath, 1);
-    return (~(_outfd = -1));
+    if (~(_outfd = -1)) {
+      do File.write(_outfd, INIT_SP);
+      do _call(SYS_INIT, 0);
+      return true;
+    }
+    return false;
   }
   method boolean closeOutputFile() 
   {
@@ -271,10 +308,13 @@ class Jhvm {
     var int fh;
     var String line;
     var String arg1;
+    var String str;
 
     do Output.printString(TRANSLATING);
     do Output.printString(filename);
     do Output.println();
+
+    do _fileNameFromPath(filename);
 
 
     let fh = File.open(filename, 0);
@@ -303,6 +343,7 @@ class Jhvm {
           do _pop(arg1, _parseArgument2(line));
         } else {
         if (line.compare(0, FUNCTION, 0, 8) = 0) {
+          let _fnCounter = _fnCounter + 1;
           let arg1 = _parseArgument1(line);
           do _function(arg1, _parseArgument2(line));
         } else {
@@ -312,15 +353,23 @@ class Jhvm {
         } else {
         if (line.compare(0, LABEL, 0, 5) = 0) {
           let arg1 = _parseArgument1(line);
-          do _label(arg1);
+          let str = _prefixLabel(arg1);
+          do File.write(_outfd, "\n// label\n");
+
+          do _label(str);
+          do str.dispose();
         } else {
         if (line.compare(0, GOTO, 0, 4) = 0) {
           let arg1 = _parseArgument1(line);
-          do _goto(arg1);
+          let str = _prefixLabel(arg1);
+          do _goto(str);
+          do str.dispose();
         } else {
         if (line.compare(0, IFGOTO, 0, 6) = 0) {
           let arg1 = _parseArgument1(line);
-          do _if_goto(arg1);
+          let str = _prefixLabel(arg1);
+          do _if_goto(str);
+          do str.dispose();
         } else {
         if (line.compare(0, RETURN, 0, 6) = 0) {
           do _return();
@@ -850,7 +899,7 @@ class Jhvm {
     do File.write(_outfd, COND_GT);
 
     do File.write(_outfd, sLabelBuffer2);
-    do File.write(_outfd, COND_JMP);
+    do File.write(_outfd, ZERO_JUMP);
 
     do bufferLabelDefine(sLabelBuffer);
     do bufferLabelDefine(sLabelBuffer2);
@@ -880,7 +929,7 @@ class Jhvm {
     do File.write(_outfd, COND_LT);
 
     do File.write(_outfd, sLabelBuffer2);
-    do File.write(_outfd, COND_JMP);
+    do File.write(_outfd, ZERO_JUMP);
 
     do bufferLabelDefine(sLabelBuffer);
     do bufferLabelDefine(sLabelBuffer2);
@@ -906,33 +955,302 @@ class Jhvm {
     return;
   }
 
-  method void _function(String functionName, int nLocals)
-  {
-    return;
-  }
-
-  method void _call(String functionName, int nArgs)
-  {
-    return;
-  }
-
-  method void _return()
-  {
-    return;
-  }
-
   method void _label(String symbol)
   {
+    var String s;
+    var int l;
+
+    let l = symbol.length();
+    let s = String.new(l+3);
+
+
+    do s.setCharAt(0, 40);   // '('
+    do s.insert(1, symbol);
+    do s.setCharAt(l+1, 41);  // ')'
+    do s.setCharAt(l+2, 10);   // '\n'
+    do s.setLength(l+3);
+
+    do File.write(_outfd, s);
+
+    do s.dispose();
     return;
   }
+
+
+  method String _prefixLabel(String symbol)
+  {
+    var String s;
+    var int l;
+    var int idx;
+
+    let l = symbol.length();
+    let s = String.new(l+6);
+
+    do s.insert(0, LABEL_PREFIX);
+    let idx = LABEL_PREFIX.length() + s.setIntAt(LABEL_PREFIX.length(), _fnCounter);
+    do s.setCharAt(idx, 46); // '.'
+    do s.insert(idx+1, symbol);
+    do s.setLength(idx+1+l);
+
+    return s;
+  }
+
+  method String _nextReturnLabel()
+  {
+    var String s;
+
+    let s = String.new(8);
+    do s.insert(0, RET);
+    do s.setLength(3 + s.setIntAt(3, _retCounter));
+    let _retCounter = _retCounter+1;
+
+    return s;
+  }
+
+
+
+  method String _loadSymbolIntoA(String symbol)
+  {
+    var String s;
+    var int l;
+    let l = symbol.length();
+    let s = String.new(l+1);
+
+    do s.setCharAt(0, 64);   // '@'
+    do s.insert(1, symbol);
+    do s.setLength(l+1);
+    return s;
+  }
+
 
   method void _goto(String symbol)
   {
+    var String s;
+    let s = _loadSymbolIntoA(symbol);
+
+    do File.write(_outfd, "\n// goto\n");
+
+    do File.write(_outfd, s);
+    do File.write(_outfd, ZERO_JUMP);
+
+    do s.dispose();
     return;
   }
 
   method void _if_goto(String symbol)
   {
+    var String s;
+    let s = _loadSymbolIntoA(symbol);
+
+    do File.write(_outfd, "\n// if-goto\n");
+
+    do File.write(_outfd, POP_TO_D);
+    do File.write(_outfd, s);
+    do File.write(_outfd, D_JNE);
+
+
+    do s.dispose();
+
+    /**
+      @SP
+      AM=M-1
+      D=M
+      @<label>
+      D;JNE
+    */
+    return;
+  }
+
+  method void _function(String functionName, int nLocals)
+  {
+    do File.write(_outfd, "\n// function\n");
+
+    do _label(functionName);
+
+    if (nLocals > 0) {
+      do File.write(_outfd, MEMSET_PRE);
+      while (nLocals > 0) {
+        do File.write(_outfd, INC_A);
+
+        let nLocals = nLocals - 1;
+      }
+      do File.write(_outfd, MEMSET_POST);
+
+
+    }
+
+
+    /** memset(SP, 0, nLocals); SP += nLocals;
+
+        @SP    // *SP++ = 0
+        M=0
+        A=A+1
+        ...
+        D=A
+        @SP
+        M=D
+     */
+    return;
+  }
+
+  method void _call(String functionName, int nArgs)
+  {
+    var String strRetLabel, strRetAddr, strFun;
+
+    do File.write(_outfd, "\n// call\n");
+
+    let strRetLabel = _nextReturnLabel();
+    let strRetAddr = _loadSymbolIntoA(strRetLabel);
+
+    let strFun = _loadSymbolIntoA(functionName);
+    do bufferLabelInteger(nArgs);
+
+
+
+
+
+    do File.write(_outfd, strRetAddr);
+    do File.write(_outfd, CALL_PREAMBLE);
+    do File.write(_outfd, sLabelBuffer);
+    do File.write(_outfd, CALL_POSTAMBLE);
+    do File.write(_outfd, strFun);
+    do File.write(_outfd, ZERO_JUMP);
+
+    do strRetAddr.lstrip(AT);
+    do _label(strRetLabel);
+
+    do strFun.dispose();
+    do strRetAddr.dispose();
+    do strRetLabel.dispose();
+
+    /**
+   
+      // push return address 
+      @return_address 
+      D=A
+      @SP
+      A=M
+      M=D
+
+      // push LCL
+      @LCL
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // push ARG
+      @ARG
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // push THIS
+      @THIS
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // push THAT
+      @THAT
+      D=M
+      @SP
+      AM=M+1
+      M=D
+
+      // ARG = SP - numArgs - 5
+      @SP
+      DM=M+1
+      @<numArgs>
+      D=D-A
+      @5
+      D=D-A
+      @ARG
+      M=D
+
+      // LCL = SP
+      @SP
+      D=M
+      @LCL
+      M=D
+
+      @<functionName>
+      0;JMP
+    (return_address)
+
+      */
+    return;
+  }
+
+  method void _return()
+  {
+    do File.write(_outfd, "\n// return\n");
+
+    do File.write(_outfd, RETURN_PREAMBLE);
+
+
+    /**
+
+    // save return address(LCL-5) to R14
+    // R14 = LCL-5
+      @LCL
+      D=M
+      @5
+      A=D-A
+      D=M
+      @R14
+      M=D
+
+    // pop return value and store at arg+0
+      @SP
+      AM=M-1
+      D=M
+      @ARG
+      A=M
+      M=D
+
+      // SP <- ARG+1
+      DA=A+1
+      @SP
+      M=D
+
+      // THAT <- pop:LCL
+      @LCL
+      AM=M-1
+      D=M
+      @THAT
+      M=D
+
+      // THIS <- pop:LCL
+      @LCL
+      AM=M-1
+      D=M
+      @THIS
+      M=D
+
+      // ARG <- pop:LCL
+      @LCL
+      AM=M-1
+      D=M
+      @ARG
+      M=D
+
+      // LCL <- pop:LCL
+      @LCL
+      AM=M-1
+      D=M
+      @LCL
+      M=D
+
+      // jump to R14
+      @R14
+      A=M
+      0;JMP
+
+
+      */
     return;
   }
 
