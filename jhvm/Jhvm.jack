@@ -207,7 +207,8 @@ class Jhvm {
     let INC_A = " M=0\n A=A+1\n";
     let MEMSET_POST = "\n D=A\n @SP\n M=D\n";
 
-    let RETURN_PREAMBLE = "\n @SP\n AM=M-1\n D=M\n @ARG\n A=M\n M=D\n @ARG\n D=M+1\n @SP\n M=D\n @LCL\n D=M\n @R15\n M=D\n @R15\n AM=M-1\n D=M\n @THAT\n M=D\n @R15\n AM=M-1\n D=M\n @THIS\n M=D\n @R15\n AM=M-1\n D=M\n @ARG\n M=D\n @R15\n AM=M-1\n D=M\n @LCL\n M=D\n @R15\n A=M\n 0;JMP\n";
+
+    let RETURN_PREAMBLE = "@LCL\n D=M\n @5\n A=D-A\n D=M\n @R14\n M=D\n @SP\n AM=M-1\n D=M\n @ARG\n A=M\n M=D\n AD=A+1\n @SP\n M=D\n @LCL\n AM=M-1\n D=M\n @THAT\n M=D\n @LCL\n AM=M-1\n D=M\n @THIS\n M=D\n @LCL\n AM=M-1\n D=M\n @ARG\n M=D\n @LCL\n AM=M-1\n D=M\n @LCL\n M=D\n @R14\n A=M\n 0;JMP\n";
 
     let CALL_PREAMBLE = "\n D=A\n @SP\n A=M\n M=D\n @LCL\n D=M\n @SP\n AM=M+1\n M=D\n @ARG\n D=M\n @SP\n AM=M+1\n M=D\n @THIS\n D=M\n @SP\n AM=M+1\n M=D\n @THAT\n D=M\n @SP\n AM=M+1\n M=D\n @SP\n MD=M+1\n";
     let CALL_POSTAMBLE = "\n D=D-A\n @5\n D=D-A\n @ARG\n M=D\n @SP\n D=M\n @LCL\n M=D\n";
@@ -1179,7 +1180,17 @@ class Jhvm {
 
     /**
 
-      // pop return value and store at arg+0
+    // save return address(LCL-5) to R14
+    // R14 = LCL-5
+      @LCL
+      D=M
+      @5
+      A=D-A
+      D=M
+      @R14
+      M=D
+
+    // pop return value and store at arg+0
       @SP
       AM=M-1
       D=M
@@ -1187,50 +1198,44 @@ class Jhvm {
       A=M
       M=D
 
-      // reposition SP to point to arg+1
-      @ARG
-      D=M+1
+      // SP <- ARG+1
+      DA=A+1
       @SP
       M=D
 
-      // R15 = LCL
+      // THAT <- pop:LCL
       @LCL
-      D=M
-      @R15
-      M=D
-
-      // pop from R15: restore THAT
-      @R15
       AM=M-1
       D=M
       @THAT
       M=D
 
-      // pop from R15: restore THIS
-      @R15
+      // THIS <- pop:LCL
+      @LCL
       AM=M-1
       D=M
       @THIS
       M=D
 
-      // pop from R15: restore ARG
-      @R15
+      // ARG <- pop:LCL
+      @LCL
       AM=M-1
       D=M
       @ARG
       M=D
 
-      // pop from R15: restore LCL
-      @R15
+      // LCL <- pop:LCL
+      @LCL
       AM=M-1
       D=M
       @LCL
       M=D
 
-      // R15 should now point to return address
-      @R15
+      // jump to R14
+      @R14
       A=M
       0;JMP
+
 
       */
     return;
