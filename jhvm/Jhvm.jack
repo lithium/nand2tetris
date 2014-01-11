@@ -341,6 +341,7 @@ class Jhvm {
           do _pop(arg1, _parseArgument2(line));
         } else {
         if (line.compare(0, FUNCTION, 0, 8) = 0) {
+          let _fnCounter = _fnCounter + 1;
           let arg1 = _parseArgument1(line);
           do _function(arg1, _parseArgument2(line));
         } else {
@@ -1048,8 +1049,9 @@ class Jhvm {
 
   method void _function(String functionName, int nLocals)
   {
-    do _label(functionName);
     do File.write(_outfd, "\n// function\n");
+
+    do _label(functionName);
 
     if (nLocals > 0) {
       do File.write(_outfd, MEMSET_PRE);
@@ -1061,7 +1063,6 @@ class Jhvm {
       do File.write(_outfd, MEMSET_POST);
 
 
-      let _fnCounter = _fnCounter + 1;
     }
 
 
