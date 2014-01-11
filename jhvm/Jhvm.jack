@@ -308,6 +308,7 @@ class Jhvm {
     var int fh;
     var String line;
     var String arg1;
+    var String str;
 
     do Output.printString(TRANSLATING);
     do Output.printString(filename);
@@ -349,15 +350,23 @@ class Jhvm {
         } else {
         if (line.compare(0, LABEL, 0, 5) = 0) {
           let arg1 = _parseArgument1(line);
-          do _label(arg1, true);
+          let str = _prefixLabel(arg1);
+          do File.write(_outfd, "\n// label\n");
+
+          do _label(str);
+          do str.dispose();
         } else {
         if (line.compare(0, GOTO, 0, 4) = 0) {
           let arg1 = _parseArgument1(line);
-          do _goto(arg1);
+          let str = _prefixLabel(arg1);
+          do _goto(str);
+          do str.dispose();
         } else {
         if (line.compare(0, IFGOTO, 0, 6) = 0) {
           let arg1 = _parseArgument1(line);
-          do _if_goto(arg1);
+          let str = _prefixLabel(arg1);
+          do _if_goto(str);
+          do str.dispose();
         } else {
         if (line.compare(0, RETURN, 0, 6) = 0) {
           do _return();
@@ -943,38 +952,46 @@ class Jhvm {
     return;
   }
 
-  method void _label(String symbol, boolean addFnPrefix)
+  method void _label(String symbol)
   {
     var String s;
     var int l;
-    var int idx;
 
     let l = symbol.length();
-    let s = String.new(l+15);
+    let s = String.new(l+3);
 
 
     do s.setCharAt(0, 40);   // '('
-    let idx = 1;
-
-    if (addFnPrefix) {
-      do s.insert(1, LABEL_PREFIX);
-      let idx = 3 + s.setIntAt(3, _fnCounter);
-      do s.setCharAt(idx, 46);  // '.'
-      let idx = idx+1;
-    }
-
-    do s.insert(idx, symbol);
-    let idx = idx + l;
-
-    do s.setCharAt(idx, 41);  // ')'
-    do s.setCharAt(idx+1, 10);   // '\n'
-    do s.setLength(idx+2);
+    do s.insert(1, symbol);
+    do s.setCharAt(l+1, 41);  // ')'
+    do s.setCharAt(l+2, 10);   // '\n'
+    do s.setLength(l+3);
 
     do File.write(_outfd, s);
 
     do s.dispose();
     return;
   }
+
+
+  method String _prefixLabel(String symbol)
+  {
+    var String s;
+    var int l;
+    var int idx;
+
+    let l = symbol.length();
+    let s = String.new(l+6);
+
+    do s.insert(0, LABEL_PREFIX);
+    let idx = LABEL_PREFIX.length() + s.setIntAt(LABEL_PREFIX.length(), _fnCounter);
+    do s.setCharAt(idx, 46); // '.'
+    do s.insert(idx+1, symbol);
+    do s.setLength(idx+1+l);
+
+    return s;
+  }
+
 
 
   method String _loadSymbolIntoA(String symbol)
@@ -1031,7 +1048,7 @@ class Jhvm {
 
   method void _function(String functionName, int nLocals)
   {
-    do _label(functionName, false);
+    do _label(functionName);
     do File.write(_outfd, "\n// function\n");
 
     if (nLocals > 0) {
@@ -1063,11 +1080,13 @@ class Jhvm {
 
   method void _call(String functionName, int nArgs)
   {
-    var String strRetAddr, strFun;
+    var String strRetLabel, strRetAddr, strFun;
 
     do File.write(_outfd, "\n// call\n");
 
-    let strRetAddr = _loadSymbolIntoA(RET);
+    let strRetLabel = _prefixLabel(RET);
+    let strRetAddr = _loadSymbolIntoA(strRetLabel);
+
     let strFun = _loadSymbolIntoA(functionName);
     do bufferLabelInteger(nArgs);
 
@@ -1083,10 +1102,11 @@ class Jhvm {
     do File.write(_outfd, ZERO_JUMP);
 
     do strRetAddr.lstrip(AT);
-    do _label(strRetAddr, true);
+    do _label(strRetLabel);
 
     do strFun.dispose();
     do strRetAddr.dispose();
+    do strRetLabel.dispose();
 
     /**
    
