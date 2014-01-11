@@ -251,7 +251,6 @@ class Jhvm {
     }
 
 
-    do _fileNameFromPath(_outPath);
 
     return _outPath;
   }
@@ -314,6 +313,8 @@ class Jhvm {
     do Output.printString(TRANSLATING);
     do Output.printString(filename);
     do Output.println();
+
+    do _fileNameFromPath(filename);
 
 
     let fh = File.open(filename, 0);
