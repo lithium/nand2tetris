@@ -947,15 +947,28 @@ class Jhvm {
   {
     var String s;
     var int l;
-    let l = symbol.length();
-    let s = String.new(l+3);
+    var int idx;
 
-    //(<symbol>)
+    let l = symbol.length();
+    let s = String.new(l+15);
+
+
     do s.setCharAt(0, 40);   // '('
-    do s.insert(1, symbol);
-    do s.setCharAt(l+1, 41);  // ')'
-    do s.setCharAt(l+2, 10);   // '\n'
-    do s.setLength(l+3);
+    let idx = 1;
+
+    if (addFnPrefix) {
+      do s.insert(1, LABEL_PREFIX);
+      let idx = 3 + s.setIntAt(3, _fnCounter);
+      do s.setCharAt(idx, 46);  // '.'
+      let idx = idx+1;
+    }
+
+    do s.insert(idx, symbol);
+    let idx = idx + l;
+
+    do s.setCharAt(idx, 41);  // ')'
+    do s.setCharAt(idx+1, 10);   // '\n'
+    do s.setLength(idx+2);
 
     do File.write(_outfd, s);
 
