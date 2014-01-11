@@ -3,7 +3,7 @@ class Jhvm {
   field String _fileName;
   field int _outfd;
   field int _arg2idx;
-  field int _eqCounter, _gtCounter, _ltCounter, _fnCounter;
+  field int _eqCounter, _gtCounter, _ltCounter, _fnCounter, _retCounter;
 
   static String DOTASM;
   static String DOTVM;
@@ -994,6 +994,18 @@ class Jhvm {
     return s;
   }
 
+  method String _nextReturnLabel()
+  {
+    var String s;
+
+    let s = String.new(8);
+    do s.insert(0, RET);
+    do s.setLength(3 + s.setIntAt(3, _retCounter));
+    let _retCounter = _retCounter+1;
+
+    return s;
+  }
+
 
 
   method String _loadSymbolIntoA(String symbol)
@@ -1086,7 +1098,7 @@ class Jhvm {
 
     do File.write(_outfd, "\n// call\n");
 
-    let strRetLabel = _prefixLabel(RET);
+    let strRetLabel = _nextReturnLabel();
     let strRetAddr = _loadSymbolIntoA(strRetLabel);
 
     let strFun = _loadSymbolIntoA(functionName);
